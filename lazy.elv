@@ -94,6 +94,19 @@ fn iterate [f @seed]{
 
 # high level iterators
 
+fn prepend [iter @arr]{
+  iterator [meta @_]{
+    if (< $meta (count $arr)) {
+      put (fun:inc $meta)
+      put $arr[$meta]
+    } elif (not ($iter[exhausted])) {
+      put $meta
+      put ($iter[curr])
+      nop ($iter[next])
+    }
+  } &meta=0
+}
+
 fn filter [f iter]{
   iterator [@_]{
     while (and (not ($iter[exhausted])) (not ($f ($iter[curr])))) {
