@@ -83,7 +83,7 @@ fn cycle [@args]{
       put (fun:inc $meta)
       put $args[(fun:inc $meta)]
     }
-  } &seed=$args[0] &meta=0
+  } &seed=[$args[0]] &meta=0
 }
 
 fn iterate [f @seed]{
