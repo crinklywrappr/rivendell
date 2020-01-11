@@ -15,7 +15,7 @@ fn sparky [@args &min=$false &max=$false]{
     } elif (> $a $max) {
       put █
     } else {
-      idx = (/ (- $a $min) $sz)
+      idx = (to-string (/ (- $a $min) $sz))
       float = (str:last-index $idx .)
       if (> $float -1) {
         idx = $idx[:$float]
