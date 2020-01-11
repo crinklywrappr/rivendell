@@ -5,7 +5,7 @@ fn fibs []{
   f = (fun:box (fun:destruct [x y]{
       put $y (+ $x $y)
     }))
-  lazy:iterate $f [1 1] |
+  lazy:iterate $f [(float64 1) (float64 1)] |
     (fun:partial $lazy:map~ $fun:first~)
 }
 
