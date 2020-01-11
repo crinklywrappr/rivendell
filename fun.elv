@@ -299,6 +299,17 @@ fn not-any [f @args]{
   not (some $f $@args)
 }
 
+fn first-pred [f @args]{
+  res = $false
+  for a $args {
+    res = ($f $a)
+    if $res {
+      put $a
+      break
+    }
+  }
+}
+
 fn map [f @args]{
   if (every [a]{ eq (kind-of $a) list } $@args) {
     shortest = (each $count~ $args | min)
