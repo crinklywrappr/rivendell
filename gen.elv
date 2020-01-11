@@ -10,25 +10,36 @@ fn fibs []{
 }
 
 fn primes []{
-  update-map = [m curr]{
-      for k [(keys $m)] {
-        if (>= $curr $m[$k]) {
-          m = (fun:update $m $k $+~ $k $k)
-        }
-      }
-      put $m
+
+  enqueue = (put [sieve n step]{
+    k = (+ $n $step)
+    while (has-key $sieve $k) {
+      k = (+ $k $step)
     }
-  lazy:iterator [meta @seed]{
-    i = $@seed
-    looking = $true
-    while $looking {
-      i = (+ $i 2)
-      if (not (fun:some [k]{ == $meta[$k] $i } (keys $meta))) {
-        meta = (assoc $meta $i (* $i 3))
-	looking = $false
-      }
-      meta = ($update-map $meta $i)
+    assoc $sieve $k $step
+  })
+
+  next-sieve = (put [sieve k]{
+    if (has-key $sieve $k) {
+      step = $sieve[$k]
+      sieve = (dissoc $sieve $k)
+      $enqueue $sieve $k $step
+    } else {
+      $enqueue $sieve $k (+ $k $k)
     }
-    put $meta $i
-  } &meta=[&3=9] &seed=3
+  })
+
+  next-primes = (put [sieve @seed]{
+    k = $@seed
+    sieve = ($next-sieve $sieve $k)
+    k = (+ $k 2)
+    while (has-key $sieve $k) {
+      sieve = ($next-sieve $sieve $k)
+      k = (+ $k 2)
+    }
+    put $sieve $k
+  })
+
+  lazy:iterator $next-primes &meta=[&] &seed=[(float64 3)] |
+    lazy:prepend (all) (float64 2)
 }

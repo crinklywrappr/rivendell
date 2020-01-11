@@ -439,7 +439,7 @@ fn contains [coll k]{
   if (in (kind-of $coll) [list string]) {
     < $k (count $coll)
   } elif (eq (kind-of $coll) map) {
-    in $k [(keys $coll)]
+    has-key $coll $k
   }
 }
 
