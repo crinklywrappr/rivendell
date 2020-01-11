@@ -122,6 +122,13 @@ fn flatten [li]{
   }
 }
 
+fn vals [map]{
+  ## Hard to believe this isn't a builtin
+  each [k]{
+    put $map[$k]
+  } [(keys $map)]
+}
+
 fn kvs [map]{
   ## This makes maps iterable
   each [k]{
