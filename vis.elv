@@ -70,9 +70,21 @@ fn sparky [@args &min=$false &max=$false]{
 }
 
 fn barky [m &formatter=$lpad~
-          &pad-char="." &bar-char=█ 
-          &desc-room=9 &max-width=80
+          &pad-char=" " &bar-char=█ 
+          &max-cols=80 &desc-pct=.125 
           &min=$false &max=$false]{
+
+  if (not (< 0 $desc-pct 1)) {
+    put "invalid description size"
+    return
+  }
+
+  # - 4 takes into account implicit quotes, and the '> ' 'prompt'
+  cols = (fun:min $max-cols (- (float64 (tput cols)) 4))
+  desc-room = (* $desc-pct $cols | 
+      fun:dec (all) |
+      truncatef64 (all) |
+      fun:max 1 (all))
 
   @kvs = (fun:kvs $m)
 
@@ -88,7 +100,7 @@ fn barky [m &formatter=$lpad~
   min = (or $min $m2[min])
   max = (or $max $m2[max])
   @kvs = (fun:kvs $m2[m])
-  bar-room = (- $max-width $desc-room 1)
+  bar-room = (- $cols $desc-room 1)
   unitsz = (/ $bar-room (- $max $min))
 
   each (fun:destruct [k v]{
