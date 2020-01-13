@@ -1,3 +1,4 @@
+use ./base
 use ./fun
 
 fn iterator [f &meta=$false &seed=[$false]]{
@@ -7,26 +8,26 @@ fn iterator [f &meta=$false &seed=[$false]]{
   next = (if $meta {
       put []{
         if (not (eq $seed [])) {
-	  if (and (not (eq $seed [$false])) $record) {
-	    tape = (fun:append $tape $@seed)
-	  }
+          if (and (not (eq $seed [$false])) $record) {
+            tape = (fun:append $tape $@seed)
+          }
           @resp = ($f $meta $@seed)
-	  if (> (count $resp) 1) {
-	    meta = (take 1 $resp)
-	    @seed = (drop 1 $resp)
-	  } else {
-	    seed = []
-	  }
+          if (> (count $resp) 1) {
+            meta = (take 1 $resp)
+            @seed = (drop 1 $resp)
+          } else {
+            seed = []
+          }
         }
       }
     } else {
       put []{
         if (not (eq $seed [])) {
-	  if (and (not (eq $seed [$false])) $record) {
-	    tape = (fun:append $tape $@seed)
-	  }
-	  @seed = ($f $@seed)
-	}
+	        if (and (not (eq $seed [$false])) $record) {
+            tape = (fun:append $tape $@seed)
+          }
+          @seed = ($f $@seed)
+        }
       }
     })
   
@@ -36,7 +37,7 @@ fn iterator [f &meta=$false &seed=[$false]]{
       put []{
         if $need-seed {
           nop ($next)
-	  need-seed = $false
+          need-seed = $false
         }
         put $@seed
       }
@@ -63,25 +64,25 @@ fn iterator [f &meta=$false &seed=[$false]]{
 # basic iterators
 
 fn iter-seq [@args]{
-  @args = (fun:check-pipe $args)
-  c = (fun:dec (count $args))
+  @args = (base:check-pipe $args)
+  c = (base:dec (count $args))
   iterator [meta @seed]{
     if (< $meta $c) {
-      put (fun:inc $meta)
-      put $args[(fun:inc $meta)]
+      put (base:inc $meta)
+      put $args[(base:inc $meta)]
     }
   } &seed=$args[0] &meta=0
 }
 
 fn cycle [@args]{
-  @args = (fun:check-pipe $args)
-  c = (fun:dec (count $args))
+  @args = (base:check-pipe $args)
+  c = (base:dec (count $args))
   iterator [meta @seed]{
     if (== $meta $c) {
       put 0 $args[0]
     } else {
-      put (fun:inc $meta)
-      put $args[(fun:inc $meta)]
+      put (base:inc $meta)
+      put $args[(base:inc $meta)]
     }
   } &seed=[$args[0]] &meta=0
 }
@@ -97,7 +98,7 @@ fn iterate [f @seed]{
 fn prepend [iter @arr]{
   iterator [meta @_]{
     if (< $meta (count $arr)) {
-      put (fun:inc $meta)
+      put (base:inc $meta)
       put $arr[$meta]
     } elif (not ($iter[exhausted])) {
       put $meta
@@ -129,7 +130,7 @@ fn unique [iter &count=$false]{
       if (not ($iter[exhausted])) {
         c x = 0 ($iter[curr])
         while (and (not ($iter[exhausted])) (eq $x ($iter[curr]))) {
-	  c = (fun:inc $c)
+          c = (base:inc $c)
           nop ($iter[next])
         }
         put [$c $x]
@@ -153,22 +154,22 @@ fn map [f @iters]{
     iterator [@_]{
       over = (fun:some [i]{ put ($i[exhausted]) } $@iters)
       if (not $over) {
-	put (each [i]{ $i[curr] } $iters | $f (all))
-	nop (each [i]{ $i[next] } $iters)
+        put (each [i]{ $i[curr] } $iters | $f (all))
+        nop (each [i]{ $i[next] } $iters)
       }
     }
   } else {
     iterator &meta=$iters[0] [meta @_]{
       if (not ($meta[exhausted])) {
         put $meta ($f ($meta[curr]))
-	nop ($meta[next])
+        nop ($meta[next])
       }
     }
   }
 }
 
 fn map-indexed [f @iters]{
-  idx-iter = (iterator &seed=0 $fun:inc~)
+  idx-iter = (iterator &seed=0 $base:inc~)
   iters = (fun:prepend $iters $idx-iter)
   map $f (explode $iters)
 }
@@ -184,7 +185,7 @@ fn interpose [sep iter]{
 fn ltake [n iter]{
   iterator &meta=0 [meta @_]{
     if (and (not ($iter[exhausted])) (< $meta $n)) {
-      put (fun:inc $meta) ($iter[curr])
+      put (base:inc $meta) ($iter[curr])
       nop ($iter[next])
     }
   }
@@ -194,7 +195,7 @@ fn ldrop [n iter]{
   iterator &meta=0 [meta @_]{
     while (and (not ($iter[exhausted])) (< $meta $n)) {
       nop ($iter[next])
-      meta = (fun:inc $meta)
+      meta = (base:inc $meta)
     }
     if (not ($iter[exhausted])) {
       put $n ($iter[curr])
@@ -238,62 +239,62 @@ fn partition [n iter &step=$false &pad=$false]{
     if (and $step (< $step $n)) {
       iterator [@seed]{
         if (eq $seed [$false]) {
-	  seed = []
-	}
-	@bb = (drop $step $@seed)
-	i = (count $bb)
-	@els = (while (and (not ($iter[exhausted])) (< $i $n)) {
-	  i = (fun:inc $i)
-	  put ($iter[curr])
-	  nop ($iter[next])
-	})
-	els = [$@bb $@els]
-	c = (count $els)
-	if (> $c 0) {
-	  if (== $c $n) {
-	    put $els
-	  } elif $pad {
-	    put (fun:append $els (take (- $n $c) $pad))
-	  }
-	}
+          seed = []
+        }
+        @bb = (drop $step $@seed)
+        i = (count $bb)
+        @els = (while (and (not ($iter[exhausted])) (< $i $n)) {
+            i = (base:inc $i)
+            put ($iter[curr])
+            nop ($iter[next])
+          })
+        els = [$@bb $@els]
+        c = (count $els)
+        if (> $c 0) {
+          if (== $c $n) {
+            put $els
+          } elif $pad {
+            put (fun:append $els (take (- $n $c) $pad))
+          }
+        }
       }
     } elif (and $step (> $step $n)) {
       iterator [@_]{
         i = 0
-	@els = (while (and (not ($iter[exhausted])) (< $i $n)) {
-	  i = (fun:inc $i)
-	  put ($iter[curr])
-	  nop ($iter[next])
-	})
-	c = (count $els)
-	if (> $c 0) {
-	  if (== $c $n) {
-	    put $els
-	    while (and (not ($iter[exhausted])) (< $i $step)) {
-	      i = (fun:inc $i)
-	      nop ($iter[next])
-	    }
-	  } elif $pad {
-	    put (fun:append $els (take (- $n $c) $pad))
-	  }
-	}
+        @els = (while (and (not ($iter[exhausted])) (< $i $n)) {
+            i = (base:inc $i)
+            put ($iter[curr])
+            nop ($iter[next])
+          })
+        c = (count $els)
+        if (> $c 0) {
+          if (== $c $n) {
+            put $els
+            while (and (not ($iter[exhausted])) (< $i $step)) {
+              i = (base:inc $i)
+              nop ($iter[next])
+            }
+          } elif $pad {
+            put (fun:append $els (take (- $n $c) $pad))
+          }
+        }
       }
     } else {
       iterator [@_]{
         i = 0
-	@els = (while (and (not ($iter[exhausted])) (< $i $n)) {
-	  i = (fun:inc $i)
-	  put ($iter[curr])
-	  nop ($iter[next])
-	})
-	c = (count $els)
-	if (> $c 0) {
-	  if (== $c $n) {
-	    put $els
-	  } elif $pad {
-	    put (fun:append $els (take (- $n $c) $pad))
-	  }
-	}
+        @els = (while (and (not ($iter[exhausted])) (< $i $n)) {
+            i = (base:inc $i)
+            put ($iter[curr])
+            nop ($iter[next])
+          })
+        c = (count $els)
+        if (> $c 0) {
+          if (== $c $n) {
+            put $els
+          } elif $pad {
+            put (fun:append $els (take (- $n $c) $pad))
+          }
+        }
       }
     }
   }
@@ -321,7 +322,7 @@ fn first [iter]{
 }
 
 fn nth [n iter]{
-  ldrop (fun:dec $n) $iter | (fun:partial $ltake~ 1) | blast (all)
+  ldrop (base:dec $n) $iter | (fun:partial $ltake~ 1) | blast (all)
 }
 
 fn some [f iter]{

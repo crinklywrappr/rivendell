@@ -1,3 +1,4 @@
+use ./base
 use ./fun
 use ./lazy
 
@@ -6,7 +7,7 @@ fn fibs []{
       put $y (+ $x $y)
     }))
   lazy:iterate $f [(float64 1) (float64 1)] |
-    (fun:partial $lazy:map~ $fun:first~)
+    (fun:partial $lazy:map~ $base:first~)
 }
 
 fn primes []{

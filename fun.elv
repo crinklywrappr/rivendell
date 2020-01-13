@@ -1,56 +1,15 @@
-fn is-zero [n]{ == 0 $n }
-fn is-one [n]{ == 1 $n }
-fn is-even [n]{ == (% $n 2) 0 }
-fn is-odd [n]{ == (% $n 2) 1 }
-fn dec [n]{ - $n 1 }
-fn inc [n]{ + $n 1 }
-fn pos [n]{ > $n 0 }
-fn neg [n]{ < $n 0 }
+use ./base
 
-fn abs [n]{
-  if (neg $n) {
-    put (* $n -1)
-  } else {
-    put $n
-  }
+fn swap [coll x y]{
+  assoc (assoc $coll $x $coll[$y]) $y $coll[$x]
 }
 
-fn is-map [x]{ eq (kind-of $x) map }
-fn is-list [x]{ eq (kind-of $x) list }
-fn is-string [x]{ eq (kind-of $x) string }
-fn prepend [li @args]{ put [(put $@args (explode $li))] }
-fn append  [li @args]{ put [(put (explode $li) $@args)] }
-fn concat2 [l1 l2]{ put [(explode $l1) (explode $l2)] }
-fn pluck [li n]{ put [(explode $li[:$n]) (explode $li[(inc $n):])] }
-fn get [li n]{ put $li[$n] } 
-fn first [li]{ put $li[0] }
-fn ffirst [li]{ first (first $li) }
-fn second [li]{ put $li[1] }
-fn rest [li]{ put $li[1:] }
-fn end [li]{ put $li[-1] }
-fn swap [coll x y]{ assoc (assoc $coll $x $coll[$y]) $y $coll[$x] }
-fn update [coll k f @args]{ assoc $coll $k ($f $coll[$k] $@args) }
-
-fn nth [li n &not-found=$false]{
-  if (and $not-found (> $n (count $li))) {
-    put $not-found
-  } else {
-    drop $n $li | take 1
-  }
-}
-
-fn is-empty [li]{ is-zero (count $li) }
-fn check-pipe [li]{
-  # use when taking @args
-  if (is-empty $li) {
-    put (all)
-  } else {
-    explode $li
-  }
+fn update [coll k f @args]{ 
+  assoc $coll $k ($f $coll[$k] $@args) 
 }
 
 fn listify [@els]{ 
-  @els = (check-pipe $els)
+  @els = (base:check-pipe $els)
   put $els 
 }
 fn destruct [f]{
@@ -63,14 +22,14 @@ fn complement [f]{ put [x]{ not ($f $x) } }
 
 fn partial [f @supplied]{
   put [@args]{ 
-    @args = (check-pipe $args)
+    @args = (base:check-pipe $args)
     $f $@supplied $@args 
   }
 }
 
 fn juxt [@fns]{
   put [@args]{
-    @args = (check-pipe $args)
+    @args = (base:check-pipe $args)
     for f $fns {
       $f $@args
     }
@@ -108,20 +67,6 @@ fn premove [f @arr]{
   pfilter (complement $f) $@arr
 }
 
-fn flatten [li]{
-  if (eq (kind-of $li) list) {
-    f = placehoder
-    f = [x]{
-      if (eq (kind-of $x) list) {
-        each $f $x
-      } else {
-        put $x
-      }
-    }
-    each $f $li
-  }
-}
-
 fn vals [map]{
   ## Hard to believe this isn't a builtin
   each [k]{
@@ -140,28 +85,28 @@ fn into [container @arr]{
   if (eq (kind-of $container) map) {
     reduce [a b]{
       k @v = (explode $b)
-      if (is-one (count $v)) {
+      if (base:is-one (count $v)) {
         v = $v[0]
       }
       assoc $a $k $v
     } $container $@arr
   } elif (eq (kind-of $container) list) {
-    concat2 $container $arr
+    base:concat2 $container $arr
   }
 }
 
 fn reverse [@arr]{
-  @arr = (check-pipe $arr)
-  i lim = 1 (inc (count $arr))
+  @arr = (base:check-pipe $arr)
+  i lim = 1 (base:inc (count $arr))
   while (< $i $lim) {
     put $arr[-$i]
-    i = (inc $i)
+    i = (base:inc $i)
   }
 }
 
 fn comp [@fns]{
   put [@x]{
-    @x = (check-pipe $x)
+    @x = (base:check-pipe $x)
     for f [(reverse $@fns)] {
       @x = ($f (explode $x))
     }
@@ -174,12 +119,12 @@ fn box [f]{
 }
 
 fn distinct [@args]{
-  @args = (check-pipe $args)
+  @args = (base:check-pipe $args)
   into [&] $@args | keys (all)
 }
 
 fn unique [@args &count=$false]{
-  a @args = (check-pipe $args)
+  a @args = (base:check-pipe $args)
   if $count {
     i = 1
     for x $args {
@@ -188,10 +133,10 @@ fn unique [@args &count=$false]{
 	a = $x
 	i = 1
       } else {
-        i = (inc $i)
+        i = (base:inc $i)
       }
     }
-    put [$i (end $args)]
+    put [$i (base:end $args)]
   } else {
     for x $args {
       if (!=s $x $a) {
@@ -199,12 +144,12 @@ fn unique [@args &count=$false]{
 	a = $x
       }
     }
-    put (end $args)
+    put (base:end $args)
   }
 }
 
 fn merge [@maps]{
-  @maps = (check-pipe $maps)
+  @maps = (base:check-pipe $maps)
   reduce [a b]{
     into $a (kvs $b)
   } [&] $@maps
@@ -225,14 +170,14 @@ fn merge-with [f @maps]{
 }
 
 fn concat [@lists]{
-  @lists = (check-pipe $lists)
+  @lists = (base:check-pipe $lists)
   reduce [a b]{
-    concat2 $a $b
+    base:concat2 $a $b
   } [] $@lists
 }
 
 fn min [@arr]{
-  a @arr = (check-pipe $arr)
+  a @arr = (base:check-pipe $arr)
   reduce [a b]{
     if (< $b $a) {
       put $b
@@ -258,7 +203,7 @@ fn min-key [f @arr]{
 }
 
 fn max [@arr]{
-  a @arr = (check-pipe $arr)
+  a @arr = (base:check-pipe $arr)
   reduce [a b]{
     if (> $b $a) {
       put $b
@@ -330,6 +275,10 @@ fn map [f @args]{
   }
 }
 
+fn mapcat [f @args]{
+  map $f $@args | concat
+}
+
 fn pmap [f @args]{
   if (every [a]{ eq (kind-of $a) list } $@args) {
     shortest = (each $count~ $args | min)
@@ -353,7 +302,7 @@ fn map-indexed [f @args]{
 }
 
 fn interleave [@lists]{
-  @lists = (check-pipe $lists)
+  @lists = (base:check-pipe $lists)
   map $put~ $@lists
 }
 
@@ -368,7 +317,7 @@ fn partition [n @args &step=$false &pad=$false]{
       if (== $n (count $li)) {
         put $li
       } elif $pad {
-        append $li (take (- $n (count $li)) $pad)
+        base:append $li (take (- $n (count $li)) $pad)
       }
     } [(range (count $args) &step=(or $step $n))]
   }
@@ -387,7 +336,7 @@ fn difference [l1 l2]{
 }
 
 fn union [@lists]{
-  @lists = (check-pipe $lists)
+  @lists = (base:check-pipe $lists)
   concat $@lists | explode (all) | distinct
 }
 
@@ -396,7 +345,7 @@ fn iterate [f n seed]{
   put $seed
   while (< $i $n) {
     seed = ($f $seed)
-    i = (inc $i)
+    i = (base:inc $i)
     put $seed
   }
 }
@@ -410,13 +359,13 @@ fn rand-sample [n @args]{
 }
 
 fn sample [n @args]{
-  rand-idx = (comp (partial $randint~ 0) $count~ $second~)
-  f = (comp $listify~ (juxt $get~ $pluck~) (juxt $second~ $rand-idx))
-  iterate $f (inc $n) ['' $args] | drop 1 | each $first~
+  rand-idx = (comp (partial $randint~ 0) $count~ $base:second~)
+  f = (comp $listify~ (juxt $base:get~ $base:pluck~) (juxt $base:second~ $rand-idx))
+  iterate $f (base:inc $n) ['' $args] | drop 1 | each $base:first~
 }
 
 fn shuffle [@args]{
-  @args = (check-pipe $args)
+  @args = (base:check-pipe $args)
   sample (count $args) $@args
 }
 
@@ -432,7 +381,7 @@ fn group-by [f @args]{
 }
 
 fn intersection [@lists]{
-  @lists = (check-pipe $lists)
+  @lists = (base:check-pipe $lists)
 
   c = (count $lists)
   f = (destruct [k v]{ == (count $v) $c })
@@ -441,7 +390,7 @@ fn intersection [@lists]{
     group-by $put~ (all) |
     kvs (all) | 
     filter $f (all) | 
-    each $first~
+    each $base:first~
 }
 
 fn zipmap [ks vs]{
@@ -481,7 +430,7 @@ fn get-in [m @ks]{
 
 fn assoc-in [m ks v]{
   if (> (count $ks) 1) {
-    assoc $m $ks[0] (assoc-in $m[$ks[0]] (rest $ks) $v)
+    assoc $m $ks[0] (assoc-in $m[$ks[0]] (base:rest $ks) $v)
   } else {
     assoc $m $ks[0] $v
   }
@@ -489,7 +438,7 @@ fn assoc-in [m ks v]{
 
 fn update-in [m ks f @args]{
   if (> (count $ks) 1) {
-    assoc $m $ks[0] (update-in $m[$ks[0]] (rest $ks) $f $@args)
+    assoc $m $ks[0] (update-in $m[$ks[0]] (base:rest $ks) $f $@args)
   } else {
     update $m $ks[0] $f $@args
   }
@@ -524,7 +473,7 @@ fn drop-while [f @args]{
   i = 0
   c = (count $args)
   while (and (< $i $c) ($f $args[$i])) {
-    i = (inc $i)
+    i = (base:inc $i)
   }
   put (explode $args[(put $i):])
 }
