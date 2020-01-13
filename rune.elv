@@ -4,7 +4,7 @@ fn truncatestr [n s]{
   put $s[:(fun:min $n (count $s))]
 }
 
-fn lpad [n s &char="."]{
+fn lpad [n s &char=" "]{
   l = (- $n (count $s))
   if (> $l 0) {
     pad = (repeat $l $char | joins '')
@@ -14,7 +14,7 @@ fn lpad [n s &char="."]{
   }
 }
 
-fn rpad [n s &char="."]{
+fn rpad [n s &char=" "]{
   l = (- $n (count $s))
   if (> $l 0) {
     pad = (repeat $l $char | joins '')

@@ -1,3 +1,4 @@
+use re
 use ./base
 use ./fun
 use ./num
@@ -27,7 +28,7 @@ fn sparky [@args &min=$false &max=$false]{
 
 fn barky [m &formatter=$rune:lpad~
           &pad-char=" " &bar-char=█ 
-          &max-cols=80 &desc-pct=.125 
+          &max-cols=80 &desc-pct=.2
           &min=$false &max=$false]{
 
   if (not (< 0 $desc-pct 1)) {
@@ -35,8 +36,7 @@ fn barky [m &formatter=$rune:lpad~
     return
   }
 
-  # - 4 takes into account implicit quotes, and the '> ' 'prompt'
-  cols = (fun:min $max-cols (- (float64 (tput cols)) 4))
+  cols = (fun:min $max-cols (float64 (tput cols)))
   desc-room = (* $desc-pct $cols | 
       base:dec (all) |
       num:truncatef64 (all) |
@@ -61,14 +61,111 @@ fn barky [m &formatter=$rune:lpad~
 
   each (fun:destruct [k v]{
     if (< $v $min) {
-      put $k
+      echo $k
     } elif (> $v $max) {
       bar = (repeat $bar-room $bar-char | joins '')
-      put $k $bar | joins ' '
+      put $k $bar | joins ' ' | echo (all)
     } else {
       n = (num:truncatef64 (* (- $v $min 1) $unitsz))
       bar = (repeat $n $bar-char | joins '')
-      put $k $bar | joins ' '
+      put $k $bar | joins ' ' | echo (all)
     }
   }) $kvs
+}
+
+fn is-decimal-string [x]{
+  or (re:match "^[0-9]+$" $x) \
+     (re:match "^[0-9]+[.][0-9]+$" $x)
+}
+
+fn rep [x &padding=0 &eval=$false]{
+  if (base:is-string $x) {
+    if (is-decimal-string $x) {
+      rune:lpad $padding $x
+    } else {
+      rune:rpad $padding $x
+    }
+  } elif (base:is-number $x) {
+     to-string $x | rune:lpad $padding (all)
+  } elif (base:is-fn $x) {
+    if $eval {
+      put '()=>' (rep ($x) &padding=0 &eval=$true) |
+        joins ' ' | rune:lpad $padding (all)
+    } else {
+      rune:lpad $padding fn
+    }
+  } elif (base:is-bool $x) {
+    if $x {
+      rune:lpad $padding t
+    } else {
+      rune:lpad $padding f
+    }
+  } elif (base:is-list $x) {
+    put '[' (count $x) ' items]' | 
+      joins '' |
+      rune:lpad $padding (all)
+  } elif (base:is-map $x) {
+    put '[& ' (count $x) ' items]' | 
+      joins '' |
+      rune:lpad $padding (all)
+  }
+}
+
+fn sheety [@ms &eval=$false]{
+
+  # format text, get sizes
+  x = (fun:reduce [a b]{
+        m = (each (fun:box (fun:destruct [k v]{
+                nv = (rep $v &eval=$eval)
+                nsz = (if (has-key $a[sz] $k) {
+                      fun:max (fun:get-in $a sz $k) (count $nv)
+                    } else {
+                      fun:max (count $k) (count $nv)
+                    })
+                a = (fun:assoc-in $a [sz $k] $nsz)
+                put $k $nv
+              })) [(fun:kvs $b)] | fun:into [&] (all))
+        fun:update $a ms $base:append~ $m
+      } [&sz=[&] &ms=[]] $@ms)
+
+  sz = $x[sz]
+  ms = $x[ms]
+
+  ex-padding = (* (base:dec (count $sz)) 3) 
+  width = (+ 4 $ex-padding (fun:reduce $+~ (fun:vals $sz)))
+
+  div = (chr 0x2502)
+
+  # header
+  put (chr 0x256d) (repeat (- $width 2) (chr 0x2500)) (chr 0x256e) | joins '' | echo (all)
+  each (fun:destruct [k v]{
+         put ' ' (rep $k &padding=$v) ' ' $div
+      }) [(fun:kvs $sz)] |
+    fun:listify |
+    base:prepend (all) $div |
+    explode (all) |
+    joins '' |
+    echo (all)
+  put $div ' ' (repeat (- $width 4) (chr 0x2500)) ' ' $div | joins '' | echo (all)
+
+  # data
+  each [m]{
+    each (fun:destruct [k v]{
+          if (has-key $m $k) {
+            put ' ' (rep $m[$k] &padding=$v) '  '
+          } else {
+            put (repeat (base:inc $v) ' ') '  '
+          }
+        }) [(fun:kvs $sz)] |
+      fun:butlast |
+      fun:listify |
+      base:prepend (all) $div |
+      base:append (all) ' ' $div |
+      explode (all) |
+      joins '' |
+      echo (all)
+  } $ms
+
+  # footer
+  put (chr 0x2570) (repeat (- $width 2) (chr 0x2500)) (chr 0x256f) | joins '' | echo (all)
 }

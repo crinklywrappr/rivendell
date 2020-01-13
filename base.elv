@@ -1,3 +1,5 @@
+use re
+
 fn is-zero [n]{ == 0 $n }
 fn is-one [n]{ == 1 $n }
 fn is-even [n]{ == (% $n 2) 0 }
@@ -7,14 +9,12 @@ fn inc [n]{ + $n 1 }
 fn pos [n]{ > $n 0 }
 fn neg [n]{ < $n 0 }
 
+fn is-fn [x]{ eq (kind-of $x) fn }
 fn is-map [x]{ eq (kind-of $x) map }
 fn is-list [x]{ eq (kind-of $x) list }
 fn is-string [x]{ eq (kind-of $x) string }
+fn is-bool [x]{ eq (kind-of $x) bool }
 fn is-number [x]{ eq (kind-of $x) !!float64 }
-fn is-numeric-string [x]{
-  or (re-match "^[0-9]+$" $x)
-     (re-match "^[0-9]+[.][0-9]+$" $x)
-}
 
 fn prepend [li @args]{ put [(put $@args (explode $li))] }
 fn append  [li @args]{ put [(put (explode $li) $@args)] }

@@ -498,6 +498,7 @@ fn drop-last [n @args]{
 }
 
 fn butlast [@args]{
+  @args = (base:check-pipe $args)
   drop-last 1 $@args
 }
 
