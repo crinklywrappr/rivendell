@@ -51,7 +51,7 @@ fn cell-format [cols s &brk=[' ' '-']]{
       @a = (each [x]{
           @words = (re:split $b+ $x)
           if (> (count $words) 1) {
-            for w [(fun:butlast $@words)] {
+            for w (base:butlast $words) {
               put $w$b
             }
             put $words[-1]
@@ -104,6 +104,6 @@ fn cell-format [cols s &brk=[' ' '-']]{
       put $a
     }
 
-fun:reduce $fold-fn [''] $@words | 
+  fun:reduce $fold-fn [''] $@words | 
       each (fun:partial $rpad~ $cols) (all)
 }
