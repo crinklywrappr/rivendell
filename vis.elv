@@ -1,4 +1,5 @@
 use re
+use str
 use ./base
 use ./fun
 use ./num
@@ -73,42 +74,93 @@ fn barky [m &formatter=$rune:lpad~
   }) $kvs
 }
 
-fn is-decimal-string [x]{
-  or (re:match "^[0-9]+$" $x) \
-     (re:match "^[0-9]+[.][0-9]+$" $x)
+formatter = [&!!float64=$rune:lpad~
+             &fn=$rune:center~
+             &bool=$rune:center~
+             &list=$rune:center~
+             &map=$rune:center~
+             &nil=$rune:rpad~]
+
+fn is-float64-string [x]{
+  try {
+    nop (float64 (str:trim-left $x ' '))
+    put $true 
+  } except {
+    put $false 
+  }
 }
 
-fn rep [x &padding=0 &eval=$false]{
-  if (base:is-string $x) {
-    if (is-decimal-string $x) {
-      rune:lpad $padding $x
-    } else {
-      rune:rpad $padding $x
-    }
-  } elif (base:is-number $x) {
-     to-string $x | rune:lpad $padding (all)
-  } elif (base:is-fn $x) {
-    if $eval {
-      put '()=>' (rep ($x) &padding=0 &eval=$true) |
-        joins ' ' | rune:lpad $padding (all)
-    } else {
-      rune:lpad $padding fn
-    }
-  } elif (base:is-bool $x) {
-    if $x {
-      rune:lpad $padding t
-    } else {
-      rune:lpad $padding f
-    }
-  } elif (base:is-list $x) {
-    put '[' (count $x) ' items]' | 
-      joins '' |
-      rune:lpad $padding (all)
-  } elif (base:is-map $x) {
-    put '[& ' (count $x) ' items]' | 
-      joins '' |
-      rune:lpad $padding (all)
-  }
+fn is-fn-string [x]{
+  or (re:match '^\ *fn\ *$' $x) (re:match '^\ *\(\)=>.*$' $x)
+}
+
+fn is-bool-string [x]{
+  re:match '^\ *[tf]\ *$' $x
+}
+
+fn is-list-string [x]{
+  re:match '^\ *\[[0-9]+ items\]\ *$' $x
+}
+
+fn is-map-string [x]{
+  re:match '^\ *\[&[0-9]+ items\]\ *$' $x
+}
+
+fn is-nil-string [x]{
+  re:match '^\ *$' $x
+}
+
+# TODO: test
+fn rep [x &typ=$false &padding=0 &eval=$false]{
+
+  typ f = (if (has-key $formatter $typ) {
+        put $typ $formatter[$typ]
+      } elif (has-key $formatter (kind-of $x)) {
+        put (kind-of $x) $formatter[(kind-of $x)]
+      } else {
+        put string
+        if (is-nil-string $x) {
+          put $formatter[nil]
+        } elif (is-list-string $x) {
+          put $formatter[list]
+        } elif (is-map-string $x) {
+          put $formatter[map]
+        } elif (is-bool-string $x) {
+          put $formatter[bool]
+        } elif (is-fn-string $x) {
+          put $formatter[fn]
+        } elif (is-float64-string $x) {
+          put $formatter[!!float64]
+        } else {
+          put $rune:rpad~
+        }
+      })
+
+  s = (if (eq $typ !!float64) {
+        to-string $x
+      } elif (and $eval (eq $typ fn)) {
+        r = $x
+        while (eq (kind-of $r) fn) {
+          r = ($r)
+        }
+        joins '' ['()=>' $r]
+      } elif (eq $typ fn) {
+        put fn
+      } elif (and (eq $typ bool) $x) {
+        put t
+      } elif (and (eq $typ bool) (not $x)) {
+        put f
+      } elif (eq $typ list) {
+        joins '' ['[' (count $x) ' items]']
+      } elif (eq $typ map) {
+        joins '' ['[&' (count $x) ' items]']
+      } elif (eq $typ nil) {
+        put ''
+      } else {
+        str:trim $x ' '
+      })
+
+  $f $padding $s
 }
 
 fn sheety [@ms &eval=$false]{
