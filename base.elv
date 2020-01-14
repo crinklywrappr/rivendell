@@ -16,6 +16,24 @@ fn is-string [x]{ eq (kind-of $x) string }
 fn is-bool [x]{ eq (kind-of $x) bool }
 fn is-number [x]{ eq (kind-of $x) !!float64 }
 
+fn splice-from [coll from empty]{
+  l = (count $coll)
+  if (> $from $l) {
+    put $empty
+  } else {
+    put $coll[{$from}:]
+  }
+}
+
+fn splice-to [coll to]{
+  l = (count $coll)
+  if (> $to $l) {
+    put $coll
+  } else {
+    put $coll[:$to]
+  }
+}
+
 fn prepend [li @args]{ put [(put $@args (explode $li))] }
 fn append  [li @args]{ put [(put (explode $li) $@args)] }
 fn concat2 [l1 l2]{ put [(explode $l1) (explode $l2)] }
@@ -26,6 +44,7 @@ fn ffirst [li]{ first (first $li) }
 fn second [li]{ put $li[1] }
 fn rest [li]{ put $li[1:] }
 fn end [li]{ put $li[-1] }
+fn butlast [li]{ put $li[:(dec (count $li))] }
 
 fn nth [li n &not-found=$false]{
   if (and $not-found (> $n (count $li))) {
