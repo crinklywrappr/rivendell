@@ -191,7 +191,7 @@ fn row [@xs &sep=" "]{
   put (explode $s | fun:butlast | joins '')(chr 0x2502)
 }
 
-fn sheety [@ms &eval=$false]{
+fn sheety [@ms &keys=$false &eval=$false]{
 
   f = [a k v]{
 
@@ -211,12 +211,24 @@ fn sheety [@ms &eval=$false]{
   }
 
   x = (fun:reduce [a b]{
-        a = (fun:update $a rows $base:append~ [&])
-        for k [(keys $b)] {
-          a = ($f $a $k $b[$k])
+        if (not (base:is-empty $a[rows][-1])) {
+          a = (fun:update $a rows $base:append~ [&])
+        }
+        if $keys {
+          for k $keys {
+            if (has-key $b $k) {
+              a = ($f $a $k $b[$k])
+            } else {
+              a = (fun:assoc-in $a [meta $k] [(kind-of $k) (count $k)])
+            }
+          }
+        } else {
+          for k [(keys $b)] {
+            a = ($f $a $k $b[$k])
+          }
         }
         put $a
-      } [&meta=[&] &rows=[]] $@ms)
+      } [&meta=[&] &rows=[[&]]] $@ms)
 
   max-cols = (tput cols)
   tbl-cols = (count [(keys $x[meta])])
