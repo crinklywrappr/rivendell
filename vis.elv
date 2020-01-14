@@ -146,9 +146,13 @@ fn rep [x &cols=$false &typ=$false &eval=$false]{
       } elif (and $eval (eq $typ fn)) {
         r = $x
         while (eq (kind-of $r) fn) {
-          r = ($r)
+          try {
+            r = ($r)
+          } except {
+            r = ERR
+          }
         }
-        joins '' ['()=>' $r]
+        joins '' ['()=>' (rep $r)]
       } elif (eq $typ fn) {
         put fn
       } elif (and (eq $typ bool) $x) {
@@ -196,7 +200,7 @@ fn sheety [@ms &keys=$false &eval=$false]{
   f = [a k v]{
 
     typ = (kind-of $v)
-    rep = (rep $v &typ=$typ)
+    rep = (rep $v &typ=$typ &eval=$eval)
     cols = (count $rep)
 
     if (not (has-key $a[meta] $k)) {
