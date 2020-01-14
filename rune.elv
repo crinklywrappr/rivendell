@@ -5,7 +5,15 @@ use ./fun
 use ./num
 
 fn truncatestr [n s]{
-  put $s[:(fun:min $n (count $s))]
+  l = (count $s)
+
+  if (or (<= $l $n) (<= $l 3)) {
+    put $s
+  } elif (<= $n 3) {
+    put ...
+  } else {
+    put $s[:(- $n 3)]...
+  }
 }
 
 fn lpad [n s &char=" "]{
