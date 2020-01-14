@@ -1,4 +1,5 @@
 use str
+use re
 use ./base
 use ./fun
 use ./num
@@ -48,7 +49,7 @@ fn cell-format [cols s &brk=[' ' '-']]{
 
   @words = (fun:reduce [a b]{
       @a = (each [x]{
-          @words = (splits $b $x)
+          @words = (re:split $b+ $x)
           if (> (count $words) 1) {
             @tween = (repeat (count $words) $b)
             fun:interleave $words $tween | fun:butlast
