@@ -1,5 +1,6 @@
 use re
 use ./base
+use ./fun
 
 fn truncatef64 [n]{
   n @_ = (to-string $n | re:split '\.' (all))
@@ -28,4 +29,15 @@ fn abs [n]{
   } else {
     put $n
   }
+}
+
+fn sum [@ns]{
+  @ns = (base:check-pipe $ns)
+  fun:reduce $+~ $@ns
+}
+
+fn average [@ns]{
+  @ns = (base:check-pipe $ns)
+  tot = (sum $@ns)
+  / $tot (count $ns)
 }
