@@ -38,7 +38,13 @@ fn center [n s &char=" "]{
   }
 }
 
-fn box-format [cols s &brk=[' ' '-']]{
+fn fast-cell-format [cols s]{
+  explode $s | 
+    fun:partition-all $cols (all) |
+    each (fun:comp (fun:partial $rpad~ $cols) (fun:partial $joins~ ''))
+}
+
+fn cell-format [cols s &brk=[' ' '-']]{
 
   @words = (fun:reduce [a b]{
       @a = (each [x]{
