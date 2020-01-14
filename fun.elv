@@ -179,11 +179,7 @@ fn concat [@lists]{
 fn min [@arr]{
   a @arr = (base:check-pipe $arr)
   reduce [a b]{
-    if (< $b $a) {
-      put $b
-    } else {
-      put $a
-    }
+    base:min2 $a $b
   } $a $@arr
 }
 
@@ -205,11 +201,7 @@ fn min-key [f @arr]{
 fn max [@arr]{
   a @arr = (base:check-pipe $arr)
   reduce [a b]{
-    if (> $b $a) {
-      put $b
-    } else {
-      put $a
-    }
+    base:max2 $a $b
   } $a $@arr
 }
 

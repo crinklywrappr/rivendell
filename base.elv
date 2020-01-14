@@ -15,6 +15,7 @@ fn is-list [x]{ eq (kind-of $x) list }
 fn is-string [x]{ eq (kind-of $x) string }
 fn is-bool [x]{ eq (kind-of $x) bool }
 fn is-number [x]{ eq (kind-of $x) !!float64 }
+fn is-nil [x]{ eq $x $nil }
 
 fn splice-from [coll from empty]{
   l = (count $coll)
@@ -45,6 +46,22 @@ fn second [li]{ put $li[1] }
 fn rest [li]{ put $li[1:] }
 fn end [li]{ put $li[-1] }
 fn butlast [li]{ put $li[:(dec (count $li))] }
+
+fn min2 [a b]{
+  if (< $a $b) {
+    put $a
+  } else {
+    put $b
+  }
+}
+
+fn max2 [a b]{
+  if (> $a $b) {
+    put $a
+  } else {
+    put $b
+  }
+}
 
 fn nth [li n &not-found=$false]{
   if (and $not-found (> $n (count $li))) {
