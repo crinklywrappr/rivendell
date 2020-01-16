@@ -234,29 +234,29 @@ fn sheety [@ms &keys=$false &eval=$false]{
         put $a
       } [&meta=[&] &rows=[[&]]] $@ms)
 
-  max-cols = (tput cols)
   tbl-cols = (count [(keys $x[meta])])
-  max-cols = (- $max-cols (base:inc $tbl-cols)) # subtract dividers
-  row-width = (/ $max-cols $tbl-cols)
+  div-cols = (* (base:dec $tbl-cols) 3)
+  max-cols = (- (tput cols) (+ $div-cols 4)) # subtract border
+  cell-width = (/ $max-cols $tbl-cols)
 
-  if (< $row-width 3) {
+  if (< $cell-width 3) {
     put "table too wide for terminal"
     return
   }
 
   meta2 = (fun:reduce [a b]{
         cols = $x[meta][$b][1]
-        if (< $cols $row-width) {
+        if (< $cols $cell-width) {
           a = (fun:update $a cnt $base:inc~)
-          a = (fun:update $a tot $+~ $cols 2) # account for spacing
+          a = (fun:update $a tot $+~ $cols)
         }
         put $a
       } [&tot=0 &cnt=0] (keys $x[meta]))
 
   # Inf+ if nothing needs to be resized
-  remaining = (/ (- $max-cols $meta2[tot]) \
-                 (- $tbl-cols $meta2[cnt]))
-  remaining = (- $remaining 2) # account for spacing
+  remaining = (num:truncatef64 \
+                (/ (- $max-cols $meta2[tot]) \
+                   (- $tbl-cols $meta2[cnt])))
 
   if (< $remaining 3) {
     put "table too wide for terminal"
@@ -270,9 +270,9 @@ fn sheety [@ms &keys=$false &eval=$false]{
     curr = $meta[$k][1]
     cell-cols = (base:min2 $curr $remaining)
     meta = (fun:assoc-in $meta [$k 1] $cell-cols)
-    tot-cols = (+ $tot-cols $cell-cols 3)
+    tot-cols = (+ $tot-cols $cell-cols)
   }
-  tot-cols = (base:dec $tot-cols)
+  tot-cols = (+ $tot-cols $div-cols 2) # outside border spacing
 
   @border = (repeat $tot-cols (chr 0x2500))
 
