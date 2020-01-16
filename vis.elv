@@ -304,8 +304,9 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false]{
 
   meta = $x[meta]
   tot-cols = 0
+  ks = (or $keys [(keys $meta)])
 
-  for k [(keys $meta)] {
+  for k $ks {
     curr = $meta[$k][1]
     cell-cols = (base:min2 $curr $remaining)
     meta = (fun:assoc-in $meta [$k 1] $cell-cols)
@@ -322,7 +323,7 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false]{
   each [k]{
     typ cols = (explode $meta[$k])
     put [$k $typ $cols]
-  } [(keys $meta)] |
+  } $ks |
     row &sep=(chr 0x2502) &color=$color &hdr |
     each $echo~
 
@@ -338,7 +339,7 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false]{
       } else {
         put [$nil nil $cols]
       }
-    } [(keys $meta)] |
+    } $ks |
       row &color=$color |
       echo (all)
   }
