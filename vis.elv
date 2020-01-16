@@ -81,6 +81,13 @@ formatter = [&!!float64=$rune:lpad~
              &map=$rune:center~
              &nil=$rune:rpad~]
 
+colors = [&!!float64=36
+          &fn=35
+          &bool=33
+          &list=34
+          &map=34
+          &string=32]
+
 fn is-float64-string [x]{
   try {
     nop (float64 (str:trim-left $x ' '))
@@ -110,7 +117,36 @@ fn is-nil-string [x]{
   re:match '^\ *$' $x
 }
 
-# TODO: test
+fn colorify [s &hdr=$false &typ=$false]{
+  hdr = (if $hdr { put "1" } else { put "22" })
+  typ = (if (has-key $colors $typ) {
+        put $typ
+      } elif (is-nil-string $s) {
+        put nil
+      } elif (is-list-string $s) {
+        put list
+      } elif (is-map-string $s) {
+        put map
+      } elif (is-bool-string $s) {
+        put bool
+      } elif (is-fn-string $s) {
+        put fn
+      } elif (is-float64-string $s) {
+        put !!float64
+      } else {
+        put string
+      })
+
+  if (eq $typ nil) {
+    put $s
+    return
+  }
+
+  color = $colors[$typ]
+
+  put "\033[;"{$color}";"{$hdr}"m"{$s}"\033[0m"
+}
+
 fn rep [x &cols=$false &typ=$false &eval=$false]{
 
   typ f = (if (has-key $formatter $typ) {
@@ -177,11 +213,14 @@ fn rep [x &cols=$false &typ=$false &eval=$false]{
   $f (or $cols 0) $s
 }
 
-fn row [@xs &sep=" "]{
+fn row [@xs &sep=" " &color=$false &hdr=$false]{
   @xs = (base:check-pipe $xs)
 
   f = [a b typ cols]{
         b = (rep $b &typ=$typ &cols=$cols)
+        if $color {
+          b = (colorify $b &typ=$typ &hdr=$hdr)
+        }
         put {$a}' '{$b}' '{$sep}
       }
 
@@ -195,7 +234,7 @@ fn row [@xs &sep=" "]{
   put (explode $s | fun:butlast | joins '')(chr 0x2502)
 }
 
-fn sheety [@ms &keys=$false &eval=$false]{
+fn sheety [@ms &keys=$false &eval=$false &color=$false]{
 
   f = [a k v]{
 
@@ -283,7 +322,9 @@ fn sheety [@ms &keys=$false &eval=$false]{
   each [k]{
     typ cols = (explode $meta[$k])
     put [$k $typ $cols]
-  } [(keys $meta)] | row &sep=(chr 0x2502) | each $echo~
+  } [(keys $meta)] |
+    row &sep=(chr 0x2502) &color=$color &hdr |
+    each $echo~
 
   put (chr 0x2502) ' ' (repeat (- $tot-cols 2) (chr 0x2500)) ' ' (chr 0x2502) | 
     joins '' [(all)] |
@@ -297,7 +338,9 @@ fn sheety [@ms &keys=$false &eval=$false]{
       } else {
         put [$nil nil $cols]
       }
-    } [(keys $meta)] | row | echo (all)
+    } [(keys $meta)] |
+      row &color=$color |
+      echo (all)
   }
 
   put (chr 0x2570) $@border (chr 0x256f) | 
