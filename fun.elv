@@ -105,9 +105,10 @@ fn reverse [@arr]{
 }
 
 fn comp [@fns]{
+  @fns = (base:check-pipe $fns | reverse)
   put [@x]{
     @x = (base:check-pipe $x)
-    for f [(reverse $@fns)] {
+    for f $fns {
       @x = ($f (explode $x))
     }
     put (explode $x)
@@ -130,8 +131,8 @@ fn unique [@args &count=$false]{
     for x $args {
       if (!=s $x $a) {
         put [$i $a]
-	a = $x
-	i = 1
+        a = $x
+        i = 1
       } else {
         i = (base:inc $i)
       }
@@ -141,7 +142,7 @@ fn unique [@args &count=$false]{
     for x $args {
       if (!=s $x $a) {
         put $a
-	a = $x
+        a = $x
       }
     }
     put (base:end $args)
