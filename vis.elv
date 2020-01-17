@@ -117,7 +117,7 @@ fn is-nil-string [x]{
   re:match '^\ *$' $x
 }
 
-fn colorify [s &hdr=$false &typ=$false]{
+fn colorify [s &typ=$false &hdr=$false]{
   hdr = (if $hdr { put "1" } else { put "22" })
   typ = (if (has-key $colors $typ) {
         put $typ
@@ -147,7 +147,7 @@ fn colorify [s &hdr=$false &typ=$false]{
   put "\033[;"{$color}";"{$hdr}"m"{$s}"\033[0m"
 }
 
-fn rep [x &cols=$false &typ=$false &eval=$false]{
+fn rep [x &cols=$false &typ=$false &eval=$false &trim=$false]{
 
   typ f = (if (has-key $formatter $typ) {
         if (base:is-string $x) {
@@ -202,7 +202,9 @@ fn rep [x &cols=$false &typ=$false &eval=$false]{
       } elif (eq $typ nil) {
         put ''
       } else {
-        x = (str:trim $x ' ')
+        if $trim {
+          x = (str:trim $x ' ')
+        }
         if $cols {
           rune:truncatestr $cols $x
         } else {
@@ -213,11 +215,11 @@ fn rep [x &cols=$false &typ=$false &eval=$false]{
   $f (or $cols 0) $s
 }
 
-fn row [@xs &sep=" " &color=$false &hdr=$false]{
+fn row [@xs &sep=" " &color=$false &hdr=$false &trim=$false]{
   @xs = (base:check-pipe $xs)
 
   f = [a b typ cols]{
-        b = (rep $b &typ=$typ &cols=$cols)
+        b = (rep $b &typ=$typ &cols=$cols &trim=$trim)
         if $color {
           b = (colorify $b &typ=$typ &hdr=$hdr)
         }
@@ -234,7 +236,7 @@ fn row [@xs &sep=" " &color=$false &hdr=$false]{
   put (explode $s | fun:butlast | joins '')(chr 0x2502)
 }
 
-fn sheety [@ms &keys=$false &eval=$false &color=$false]{
+fn sheety [@ms &keys=$false &eval=$false &color=$false &trim=$false]{
 
   f = [a k v]{
 
@@ -324,7 +326,7 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false]{
     typ cols = (explode $meta[$k])
     put [$k $typ $cols]
   } $ks |
-    row &sep=(chr 0x2502) &color=$color &hdr |
+    row &sep=(chr 0x2502) &color=$color &trim=$trim &hdr|
     each $echo~
 
   put (chr 0x2502) ' ' (repeat (- $tot-cols 2) (chr 0x2500)) ' ' (chr 0x2502) | 
@@ -340,7 +342,7 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false]{
         put [$nil nil $cols]
       }
     } $ks |
-      row &color=$color |
+      row &color=$color &trim=$trim |
       echo (all)
   }
 
