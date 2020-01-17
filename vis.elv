@@ -79,14 +79,16 @@ formatter = [&!!float64=$rune:lpad~
              &bool=$rune:center~
              &list=$rune:center~
              &map=$rune:center~
-             &nil=$rune:rpad~]
+             &nil=$rune:rpad~
+             &exception=$rune:rpad~]
 
 colors = [&!!float64=36
           &fn=35
           &bool=33
           &list=34
           &map=34
-          &string=32]
+          &string=32
+          &exception=31]
 
 fn is-float64-string [x]{
   try {
@@ -149,15 +151,17 @@ fn colorify [s &typ=$false &hdr=$false]{
 
 fn rep [x &cols=$false &typ=$false &eval=$false &trim=$false]{
 
+  ko = (kind-of $x)
+
   typ f = (if (has-key $formatter $typ) {
-        if (base:is-string $x) {
+        if (eq $ko string) {
           put string
         } else {
           put $typ
         }
         put $formatter[$typ]
-      } elif (has-key $formatter (kind-of $x)) {
-        put (kind-of $x) $formatter[(kind-of $x)]
+      } elif (has-key $formatter $ko) {
+        put $ko $formatter[$ko]
       } else {
         put string
         if (is-nil-string $x) {
@@ -183,7 +187,13 @@ fn rep [x &cols=$false &typ=$false &eval=$false &trim=$false]{
         r = $x
         while (eq (kind-of $r) fn) {
           try {
-            r = ($r)
+            @r = ($r)
+            c = (count $r)
+            if (base:is-one $c) {
+              r = $r[0]
+            } elif (base:is-zero $c) {
+              r = $nil
+            }
           } except {
             r = ERR
           }
@@ -201,6 +211,8 @@ fn rep [x &cols=$false &typ=$false &eval=$false &trim=$false]{
         joins '' ['[&' (count $x) ' items]']
       } elif (eq $typ nil) {
         put ''
+      } elif (eq $typ exception) {
+        put ERR
       } else {
         if $trim {
           x = (str:trim $x ' ')
