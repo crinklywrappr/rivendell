@@ -526,11 +526,10 @@ fn pivot-ccw [key-col headers @maps]{
   each $kvs~ $maps |
     partition $key-count (all) |
     map (comp \
+          (box (partial $partition~ 3)) \
           $base:flatten~ \
           (box (partial $interleave~ $headers)) \
           $listify~) (all) |
-    partition 3 (all) | 
-    partition $header-count (all) |
     each (destruct (partial $reduce~ $f [&]))
 }
 
