@@ -83,14 +83,10 @@ fn check-pipe [li]{
 
 fn flatten [li]{
   if (eq (kind-of $li) list) {
-    f = placeholder
-    f = [x]{
-      if (eq (kind-of $x) list) {
-        each $f $x
-      } else {
-        put $x
-      }
+    for e $li {
+      flatten $e
     }
-    each $f $li
+  } else {
+    put $li
   }
 }
