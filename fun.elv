@@ -527,10 +527,25 @@ fn pivot-ccw [key-col headers @maps]{
     partition $key-count (all) |
     map (comp \
           $base:flatten~ \
-          $listify~ \
-          (partial $interleave~ $headers) \
+          (box (partial $interleave~ $headers)) \
           $listify~) (all) |
     partition 3 (all) | 
     partition $header-count (all) |
     each (destruct (partial $reduce~ $f [&]))
+}
+
+fn pivot-cw [header-col @maps]{
+  @headers = (each [x]{ put $x[$header-col] } $maps)
+  key-count = (base:dec (count [(keys $maps[0])]))
+
+  each (comp \
+      $vals~ \
+      [x]{ dissoc $x file }) $maps |
+    partition $key-count (all) |
+    map (comp \
+        (box (partial $interleave~ $headers)) \
+        $listify~) (all) |
+    each (comp \
+        (partial $into~ [&]) \
+        (destruct (partial $partition~ 2))) [(all)]
 }
