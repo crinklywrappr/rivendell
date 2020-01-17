@@ -507,3 +507,30 @@ fn memoize [f]{
     }
   }
 }
+
+
+fn pivot-ccw [key-col headers @maps]{
+  # header count must match map count
+
+  key-count = (count [(keys $maps[0])])
+  header-count = (count $headers)
+
+  f = [a b]{
+        header k v = (explode $b)
+        if (not (has-key $a $key-col)) {
+          a = (assoc $a $key-col $k)
+        }
+        assoc $a $header $v
+      }
+
+  each $kvs~ $maps |
+    partition $key-count (all) |
+    map (comp \
+          $base:flatten~ \
+          $listify~ \
+          (partial $interleave~ $headers) \
+          $listify~) (all) |
+    partition 3 (all) | 
+    partition $header-count (all) |
+    each (destruct (partial $reduce~ $f [&]))
+}
