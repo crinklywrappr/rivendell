@@ -75,7 +75,7 @@ fn is-empty [li]{ is-zero (count $li) }
 fn check-pipe [li]{
   # use when taking @args
   if (is-empty $li) {
-    put (all)
+    all
   } else {
     explode $li
   }
