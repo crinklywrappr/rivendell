@@ -4,6 +4,7 @@ use ./base
 use ./fun
 use ./num
 use ./rune
+use ./test
 
 fn sparky [@args &min=$false &max=$false]{
   @args = (base:check-pipe $args)
@@ -12,11 +13,16 @@ fn sparky [@args &min=$false &max=$false]{
   min = (or $min (fun:min $@args))
   max = (or $max (fun:max $@args))
   sz = (/ (- $max $min) (base:dec (count $ref)))
-  
+
+  if (or (== $min $max) (base:is-zero $sz)) {
+    repeat (base:dec (count $args)) ' ' | joins ''
+    return
+  }
+
   @sparks = (each [a]{
-    if (< $a $min) {
+    if (<= $a $min) {
       put ' '
-    } elif (> $a $max) {
+    } elif (>= $a $max) {
       put █
     } else {
       idx = (num:truncatef64 (/ (- $a $min) $sz))
@@ -362,3 +368,32 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false &trim=$false]{
     joins '' [(all)] |
     echo (all)
 }
+
+tests = [
+  ["increasing sparkline"
+  (test:matches ' ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇█')
+  []{ range 20 | sparky }]
+
+  ["decreasing sparkline"
+  (test:matches '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
+  []{ range 20 | fun:reverse | sparky }]
+
+  ["min=max sparkline (1)"
+  (test:matches '                   ')
+  []{ range 20 | sparky &max=0 }]
+
+  ["min=max sparkline (2)"
+  (test:matches '                   ')
+  []{ repeat 20 0 | sparky }]
+
+  ["mostly max sparkline"
+  (test:matches ' ███████████████████')
+  []{ range 20 | sparky &max=1 }]
+
+  ["window sparkline"
+  (test:matches '      ▁▂▃▃▄▅▅▆▇█████')
+  []{ range 20 | sparky &min=5 &max=15 }]
+
+  ["shuffled sparkline"
+  $test:something~
+  []{ range 20 | fun:shuffle | sparky }]]
