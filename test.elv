@@ -1,9 +1,19 @@
 fn matches [a]{
   put [@b]{
-    tf = (eq $@b $a)
+    tf err = (try {
+      tf = (eq $@b $a)
+      put $tf
+      put $false
+    } except {
+      put $false
+      put $true
+    })
 
     put $tf
-    if (not $tf) {
+
+    if $err {
+      put "Error occurred during equality test - try boxing your result"
+    } elif (not $tf) {
       try {
         sb = (to-string $@b)
         sa = (to-string $a)
