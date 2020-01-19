@@ -248,10 +248,11 @@ fn row [@xs &sep=" " &color=$false &hdr=$false &trim=$false]{
     $f $a $b[0] $b[1] $b[2]
   } (chr 0x2502) $@xs)
 
-  # base:butlast does not work due
-  # to unicode indexing problem
-  #put (base:butlast $s)(chr 0x2502)
-  put (explode $s | fun:butlast | joins '')(chr 0x2502)
+  if (== (count $s) (wcswidth $s)) {
+    put (base:butlast $s)(chr 0x2502)
+  } else {
+    put (explode $s | fun:butlast | joins '')(chr 0x2502)
+  }
 }
 
 fn sheety [@ms &keys=$false &eval=$false &color=$false &trim=$false]{
@@ -260,10 +261,10 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false &trim=$false]{
 
     typ = (kind-of $v)
     rep = (rep $v &typ=$typ &eval=$eval)
-    cols = (count $rep)
+    cols = (wcswidth $rep)
 
     if (not (has-key $a[meta] $k)) {
-      cols = (base:max2 $cols (count $k))
+      cols = (base:max2 $cols (wcswidth $k))
       a = (fun:assoc-in $a [meta $k] [$typ $cols])
     } else {
       a = (fun:update-in $a [meta $k 1] $base:max2~ $cols)
@@ -282,7 +283,7 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false &trim=$false]{
             if (has-key $b $k) {
               a = ($f $a $k $b[$k])
             } else {
-              a = (fun:assoc-in $a [meta $k] [(kind-of $k) (count $k)])
+              a = (fun:assoc-in $a [meta $k] [(kind-of $k) (wcswidth $k)])
             }
           }
         } else {
