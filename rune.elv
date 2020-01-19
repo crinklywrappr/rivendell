@@ -5,14 +5,18 @@ use ./fun
 use ./num
 
 fn truncatestr [n s]{
-  l = (count $s)
+  w = (wcswidth $s)
 
-  if (or (<= $l $n) (<= $l 3)) {
+  if (or (<= $w $n) (<= $w 3)) {
     put $s
   } elif (<= $n 3) {
     put ...
   } else {
-    put $s[:(- $n 3)]...
+    if (== $w (count $s)) {
+      put $s[:(- $n 3)]...
+    } else {
+      take $n $s | joins ''
+    }
   }
 }
 
