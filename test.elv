@@ -1,52 +1,44 @@
-fn matches [a]{
-  put [@b]{
-    tf err = (try {
-      tf = (eq $@b $a)
-      put $tf
-      put $false
-    } except {
-      put $false
-      put $true
-    })
+fn each-matches [a]{
+  put [b]{
+    tf = (eq $b $a)
 
     put $tf
 
-    if $err {
-      put "Error occurred during equality test - try boxing your result"
-    } elif (not $tf) {
-      try {
-        sb = (to-string $@b)
-        sa = (to-string $a)
-        put {$sb}" != "{$sa}
-      } except {
-        put "Did not match expected result"
-      }
+    if (not $tf) {
+      sb = (to-string $b)
+      sa = (to-string $a)
+      put {$sb}" != "{$sa}
     }
   }
 }
 
-fn is-error [@a]{
-  c = (count $a)
-  tf = (and \
-      (== $c 1) \
-      (not-eq $a $ok) \
+fn matches [a]{
+  put [b]{
+    tf = (eq $@b $a)
+
+    put $tf
+    if (not $tf) {
+      sb = (to-string $@b)
+      sa = (to-string $a)
+      put {$sb}" != "{$sa}
+    }
+  }
+}
+
+fn is-error [a]{
+  tf = (and (not-eq $a $ok) \
       (eq (kind-of $a) exception))
 
   put $tf
   if (not $tf) {
-    try {
-      s = (to-string $a)
-      put "Expected an exception - instead got "{$s}
-    } except {
-      put "Expected an exception - none raised"
-    }
+    s = (to-string $a)
+    put "Expected an exception - instead got "{$s}
   }
 }
 
-fn something [@a]{
-  c = (count $a)
-  tf = (and (> $c 0) \
-      (not-eq (kind-of $a[0]) exception))
+fn something [a]{
+  tf = (and (not-eq (kind-of $a) exception) \
+      (> (count $a) 0))
 
   put $tf
   if (not $tf) {
@@ -55,18 +47,18 @@ fn something [@a]{
 }
 
 # t is a testing fn like matches, is-error, & something.
-# it takes var-args and returns a boolean followed by 
-# any number of messages.  messages will be shown if it
+# it takes an arg and returns a boolean followed by 
+# any number of messages.  messages will be shown if
 # the boolean is false
-fn test [nm t f @arr &show-success=$false]{
+fn test [nm t f &show-success=$false &show-messages=$true]{
   echo "RUNNING TEST "{$nm}"...."
 
-  @res = (err = ?($f $@arr))
+  @res = (err = ?($f))
   
   echo "\u001b[1ATESTING OUTPUT FOR "{$nm}"...."
 
   tf @msgs = (if (eq $err $ok) {
-    $t $@res
+    $t $res
   } else {
     $t $err
   })
@@ -84,33 +76,42 @@ fn test [nm t f @arr &show-success=$false]{
     }
   } else {
     echo "\u001b[1A\u001b[2K\033[;31;1mFAILURE: "{$nm}"\033[0m"
-    for m $msgs {
-      echo "\033[;31;22m"{$m}"\033[0m"
+    if $show-messages {
+      for m $msgs {
+        echo "\033[;31;22m"{$m}"\033[0m"
+      }
     }
   }
 }
 
-fn runner [forms &show-success=$false]{
+fn runner [forms &show-success=$false &show-messages=$true]{
+  
+  exec-form = [nm t f]{
+        try {
+          test $nm $t $f &show-success=$show-success &show-messages=$show-messages
+        } except {
+          echo "\033[;31;1mERROR DURING TEST: "{$nm}"\033[0m"
+        }
+      }
+
   for form $forms {
     try {
       border = (repeat (tput cols) (chr 0x2500) | joins '')
       echo $border
 
-      nm t f @arr = (explode $form)
+      nm t @fs = (explode $form)
       valid = (and (eq (kind-of $nm) string) \
-          (eq (kind-of $t) fn) \
-          (eq (kind-of $f) fn))
+          (eq (kind-of $t) fn))
 
       if (not $valid) {
         fail invalid
       }
 
-      try {
-        test $nm $t $f $@arr &show-success=$show-success
-      } except {
-        echo "\033[;31;1mERROR DURING TEST: "{$nm}"\033[0m"
+      i = 1
+      for f $fs {
+        $exec-form {$nm}" ("{$i}")" $t $f
+        i = (+ $i 1)
       }
-
     } except {
       s = (to-string $form)
       echo "\033[;31;1mBAD TEST FORM: "{$s}"\033[0m"

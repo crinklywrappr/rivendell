@@ -378,12 +378,9 @@ tests = [
   (test:matches '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
   []{ range 20 | fun:reverse | sparky }]
 
-  ["min=max sparkline (1)"
+  ["min=max sparkline"
   (test:matches '                   ')
-  []{ range 20 | sparky &max=0 }]
-
-  ["min=max sparkline (2)"
-  (test:matches '                   ')
+  []{ range 20 | sparky &max=0 }
   []{ repeat 20 0 | sparky }]
 
   ["mostly max sparkline"
