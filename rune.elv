@@ -62,10 +62,10 @@ fn cell-format [cols s &brk=[' ' '-']]{
 
   words = (fun:reduce [a b]{
       @a = (each [x]{
-          @words = (re:split $b+ $x)
+          @words = (re:split {$b}+ $x)
           if (> (count $words) 1) {
             for w (base:butlast $words) {
-              put $w$b
+              put {$w}{$b}
             }
             put $words[-1]
           } else {
@@ -75,37 +75,34 @@ fn cell-format [cols s &brk=[' ' '-']]{
       put $a
     } [$s] $@brk)
 
-  chars = 0
   fold-fn = [a b]{
       b-stripped = (str:trim-right $b ' ')
 
       # switched to stateful var for perf
-      #chars = (fun:reduce [a b]{ + $a (count $b) } 0 (explode $a[-1]))
+      chars = (fun:reduce [a b]{ + $a (wcswidth $b) } 0 (explode $a[-1]))
 
-      word newline = (if (<= (+ $chars (count $b)) $cols) {
+      word newline = (if (<= (+ $chars (wcswidth $b)) $cols) {
           put $b $false
-        } elif (<= (+ $chars (count $b-stripped)) $cols) {
+        } elif (<= (+ $chars (wcswidth $b-stripped)) $cols) {
           put $b-stripped $false
         } else {
           put $b $true
         })
 
-      @parts = (while (not-eq $word '') {
-            base:splice-to $word $cols
-            word = (base:splice-from $word $cols '')
-          })
+      @parts = (explode $word |
+          fun:partition-all $cols (all) |
+          each (fun:partial $joins~ '') |
+          fun:take-while (fun:partial $not-eq~ ' ') (all))
 
       if (base:is-one (count $parts)) {
         if $newline {
           a = (base:append $a '')
-          chars = 0
         }
         a = (fun:update $a -1 [a b]{ joins '' [$a $b] } $parts[0])
       } else {
         for p $parts {
           if (not-eq $a[-1] '') {
             a = (base:append $a '')
-            chars = 0
           }
           if (not-eq $p ' ') {
             a = (fun:update $a -1 [a b]{ joins '' [$a $b] } $p)
@@ -113,7 +110,6 @@ fn cell-format [cols s &brk=[' ' '-']]{
         }
       }
 
-      chars = (+ $chars (count $parts[-1]))
       put $a
     }
 
