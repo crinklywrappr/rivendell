@@ -85,7 +85,7 @@ fn cell-format [cols s &brk=[' ' '-']]{
           put $b $true
         })
 
-      @parts = (while (not (eq $word '')) {
+      @parts = (while (not-eq $word '') {
             base:splice-to $word $cols
             word = (base:splice-from $word $cols '')
           })
@@ -98,11 +98,11 @@ fn cell-format [cols s &brk=[' ' '-']]{
         a = (fun:update $a -1 [a b]{ joins '' [$a $b] } $parts[0])
       } else {
         for p $parts {
-          if (not (eq $a[-1] '')) {
+          if (not-eq $a[-1] '') {
             a = (base:append $a '')
             chars = 0
           }
-          if (not (eq $p ' ')) {
+          if (not-eq $p ' ') {
             a = (fun:update $a -1 [a b]{ joins '' [$a $b] } $p)
           }
         }

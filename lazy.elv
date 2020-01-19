@@ -7,8 +7,8 @@ fn iterator [f &meta=$false &seed=[$false]]{
 
   next = (if $meta {
       put []{
-        if (not (eq $seed [])) {
-          if (and (not (eq $seed [$false])) $record) {
+        if (not-eq $seed []) {
+          if (and (not-eq $seed [$false]) $record) {
             tape = (fun:append $tape $@seed)
           }
           @resp = ($f $meta $@seed)
@@ -22,8 +22,8 @@ fn iterator [f &meta=$false &seed=[$false]]{
       }
     } else {
       put []{
-        if (not (eq $seed [])) {
-	        if (and (not (eq $seed [$false])) $record) {
+        if (not-eq $seed []) {
+	        if (and (not-eq $seed [$false]) $record) {
             tape = (fun:append $tape $@seed)
           }
           @seed = ($f $@seed)
