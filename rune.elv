@@ -12,11 +12,12 @@ fn truncatestr [n s]{
   } elif (<= $n 3) {
     put ...
   } else {
-    if (== $w (count $s)) {
-      put $s[:(- $n 3)]...
+    ts = (if (== $w (count $s)) {
+      put $s[:(- $n 3)]
     } else {
       take $n $s | joins ''
-    }
+    })
+    put {$ts}...
   }
 }
 
