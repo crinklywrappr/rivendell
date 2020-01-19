@@ -1,4 +1,4 @@
-fn each-matches [a]{
+fn each-is [a]{
   put [b]{
     tf = (eq $b $a)
 
@@ -12,7 +12,7 @@ fn each-matches [a]{
   }
 }
 
-fn matches [a]{
+fn is [a]{
   put [b]{
     tf = (eq $@b $a)
 

@@ -371,26 +371,26 @@ fn sheety [@ms &keys=$false &eval=$false &color=$false &trim=$false]{
 
 tests = [
   ["increasing sparkline"
-  (test:matches ' ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇█')
-  []{ range 20 | sparky }]
+  (test:is ' ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇█')
+  { range 20 | sparky }]
 
   ["decreasing sparkline"
-  (test:matches '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
-  []{ range 20 | fun:reverse | sparky }]
+  (test:is '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
+  { range 20 | fun:reverse | sparky }]
 
   ["min=max sparkline"
-  (test:matches '                   ')
-  []{ range 20 | sparky &max=0 }
-  []{ repeat 20 0 | sparky }]
+  (test:is '                   ')
+  { range 20 | sparky &max=0 }
+  { repeat 20 0 | sparky }]
 
   ["mostly max sparkline"
-  (test:matches ' ███████████████████')
-  []{ range 20 | sparky &max=1 }]
+  (test:is ' ███████████████████')
+  { range 20 | sparky &max=1 }]
 
   ["window sparkline"
-  (test:matches '      ▁▂▃▃▄▅▅▆▇█████')
-  []{ range 20 | sparky &min=5 &max=15 }]
+  (test:is '      ▁▂▃▃▄▅▅▆▇█████')
+  { range 20 | sparky &min=5 &max=15 }]
 
   ["shuffled sparkline"
   $test:something~
-  []{ range 20 | fun:shuffle | sparky }]]
+  { range 20 | fun:shuffle | sparky }]]
