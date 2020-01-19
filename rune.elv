@@ -22,7 +22,7 @@ fn truncatestr [n s]{
 }
 
 fn lpad [n s &char=" "]{
-  l = (- $n (count $s))
+  l = (- $n (wcswidth $s))
   if (> $l 0) {
     pad = (repeat $l $char | joins '')
     put $pad $s | joins ''
@@ -32,7 +32,7 @@ fn lpad [n s &char=" "]{
 }
 
 fn rpad [n s &char=" "]{
-  l = (- $n (count $s))
+  l = (- $n (wcswidth $s))
   if (> $l 0) {
     pad = (repeat $l $char | joins '')
     put $s $pad | joins ''
@@ -42,7 +42,7 @@ fn rpad [n s &char=" "]{
 }
 
 fn center [n s &char=" "]{
-  l = (- $n (count $s))
+  l = (- $n (wcswidth $s))
   if (> $l 0) {
     front = (num:truncatef64 (/ $l 2))
     back = (- $l $front)
