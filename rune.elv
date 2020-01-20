@@ -4,6 +4,19 @@ use ./base
 use ./fun
 use ./num
 
+fn substr [from to s]{
+  c = (count $s)
+  w = (wcswidth $s)
+  if (== $c $w) {
+    put {$s}[{$from}:{$to}]
+  } else {
+    if (< $to 0) {
+      to = (+ $w $to)
+    }
+    drop $from $s | take $to | joins ''
+  }
+}
+
 fn truncatestr [n s]{
   w = (wcswidth $s)
 
