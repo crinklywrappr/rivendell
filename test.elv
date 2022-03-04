@@ -1,4 +1,5 @@
 use str
+use re
 
 fn make-assertion {
   |name f &fixtures=[&] &store=[&]|
@@ -29,7 +30,7 @@ fn call-test {
 }
 
 fn call-predicate {
-  |predicate reality &fixtures=[&] &store=[&]|
+  |predicate @reality &fixtures=[&] &store=[&]|
 
   var pred-opts = $predicate[opt-names]
 
@@ -63,7 +64,7 @@ fn assert {
     # call predicate
     var bool @messages = (if (eq $err $ok) {
         if (> (count $reality) 0) {
-          call-predicate $predicate $reality &fixtures=$fixtures &store=$store
+          call-predicate $predicate $@reality &fixtures=$fixtures &store=$store
         } else {
           put $false "test produced no values"
         }
@@ -71,8 +72,9 @@ fn assert {
         call-predicate $predicate $err &fixtures=$fixtures &store=$store
       })
 
-    # $new-store should be the last thing returned
-    put $bool $expect $reality $test-fn[body] $messages $new-store
+    put [&bool=$bool &expect=$expect &reality=$reality
+         &test=$test-fn[body] &messages=$messages
+         &store=$new-store]
   } &fixtures=$fixtures &store=$store
 }
 
@@ -222,7 +224,7 @@ fn test {
 
     for tel $test-elements {
 
-      var store xs
+      var last-test store
 
       if (eq (kind-of $tel) string) {
         put $tel
@@ -233,8 +235,9 @@ fn test {
         if (eq $assertion $nil) {
           fail 'no assertion set before '{$tel[def]}
         }
-        set @xs store = ($assertion[f] $tel &store=$store)
-        put [$header $@xs $store]
+        set last-test = ($assertion[f] $tel &store=$store)
+        set store = $last-test[store]
+        assoc $last-test header $header
       } else {
         fail {$tel}' is invalid'
       }
@@ -244,6 +247,31 @@ fn test {
   }
 
   put $subheaders
+}
+
+fn format-test {
+  |body style-fn|
+  if (not (re:match \n $body)) {
+    put [($style-fn $body)]
+    return
+  }
+  var spaces = 0
+  var @lines = (re:split \n $body | each {|s| str:trim $s ' '})
+  for line $lines {
+    if (re:match '^}.*' $line) { # ends with }
+      set spaces = (- $spaces 2)
+    }
+
+    put [(styled (str:from-codepoints 0x2503) white bold)
+      ' ' (repeat $spaces ' ' | str:join '')
+    ($style-fn $line)]
+
+    if (or (re:match '.*{$' $line) ^
+      (re:match '.*\^$' $line) ^
+    (re:match '.*{\ *\|[^\|]*\|$' $line)) {
+      set spaces = (+ $spaces 2)
+    }
+  }
 }
 
 fn plain {
@@ -257,22 +285,24 @@ fn plain {
   var break-length = (if (< 80 (tput cols)) { put 80 } else { tput cols })
   var break-text = (repeat $break-length (str:from-codepoints 0x2500) | str:join '')
 
+  var testmeta
+
   for x $xs {
     if (eq $x $break) {
       echo $break-text
     } elif (and (eq (kind-of $x) string) (has-value $subheaders $x)) {
       echo ($header-text $x)
-    } elif (eq (kind-of $x) list) {
-      var name bool expect reality test messages store = $@x
-      if $bool {
-        echo ($success-text $test)
+    } elif (eq (kind-of $x) map) {
+      set testmeta = $x
+      if $testmeta[bool] {
+        format-test $testmeta[test] $success-text | each {|line| echo $@line}
       } else {
-        set expect = (to-string $expect)
-        set reality = (to-string $reality)
+        var expect = (to-string $testmeta[expect])
+        var reality = (to-string $testmeta[reality])
         echo
-        echo ($error-text-code $test)
+        format-test $testmeta[test] $error-text-code | each {|line| echo $@line}
         echo ($error-text 'EXPECTED: '{$expect})
-        echo ($error-text 'GOT: '{$reality})
+        echo ($error-text '     GOT: '{$reality})
         echo
       }
     }
@@ -290,27 +320,29 @@ fn err {
   var break-length = (if (< 80 (tput cols)) { put 80 } else { tput cols })
   var break-text = (repeat $break-length (str:from-codepoints 0x2500) | str:join '')
 
+  var testmeta
+
   for x $xs {
-    if (eq (kind-of $x) list) {
-      var name bool expect reality test messages store = $@x
-      if (not $bool) {
-        set expect = (to-string $expect)
-        set reality = (to-string $reality)
+    if (eq (kind-of $x) map) {
+      set testmeta = $x
+      if (not $testmeta[bool]) {
+        var expect = (to-string $testmeta[expect])
+        var reality = (to-string $testmeta[reality])
 
         echo
-        echo ($header-text $name)
-        echo ($error-text-code $test)
+        echo ($header-text $testmeta[header])
+        format-test $testmeta[test] $error-text-code | each {|line| echo $@line}
         echo ($error-text 'EXPECTED: '{$expect})
-        echo ($error-text 'GOT: '{$reality})
+        echo ($error-text '     GOT: '{$reality})
 
-        if (> (count $store) 0) {
+        if (> (count $testmeta[store]) 0) {
           echo ($header-text STORE)
-          echo ($info-code $store)
+          echo ($info-code $testmeta[store])
         }
 
-        if (> (count $messages) 0) {
+        if (> (count $testmeta[messages]) 0) {
           echo ($header-text MESSAGES)
-          for msg $messages {
+          for msg $testmeta[messages] {
             echo ($info-text $msg)
           }
           echo
@@ -356,16 +388,44 @@ var tests = [Tests
               { is-nil }]
 
              [helpers
-              'these functions are useful if you are writing a low-level assertion like `assert`'
+              'These functions are useful if you are writing a low-level assertion like `assert`.  Your test function can be one of four forms, and `call-test` will dispatch based on argument-reflection.'
+              'The following tests demonstrate that type of dispatch.'
               (is something)
               { call-test {|| put something} }
 
-              (is bar)
-              { call-test {|store| put $store[foo]} &store=[&foo=bar] }
+              (is foo)
+              { call-test {|store| put $store[x]} &store=[&x=foo] }
 
               (is bar)
-              { call-test {|fixtures| put $fixtures[foo]} &fixtures=[&foo=bar] }
+              { call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=bar] }
 
-              (is-each [b y])
-              { call-test {|fixtures store| put $fixtures[a]; put $store[x]} &fixtures=[&a=b] &store=[&x=y] }
+              (is-each [foo bar])
+              { call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=foo] &store=[&x=bar] }
+
+              '`call-test` expects fixtures before store.  This test errors because the input args are swapped.'
+              (is-error)
+              { call-test {|store fixtures| put $fixtures[a]; put $store[b]} &fixtures=[&a=a] &store=[&b=b] }
+
+              '`call-predicate` accepts two forms.'
+              (is $true)
+              { call-predicate {|@reality| eq $@reality foo} foo }
+              { call-predicate {|@reality &fixtures=[&] &store=[&]|
+                                  == ($reality[0] $fixtures[x] $store[x]) -1
+                               } $compare~ &fixtures=[&x=1] &store=[&x=2] }
+
+              'Any other form will error'
+              (is-error)
+              { call-predicate {|@reality &store=[&]| eq $@reality foo} foo }
+              { call-predicate {|@reality &fixtures=[&]| eq $@reality foo} foo }]
+
+             [assert
+              'assertions return the boolean result, the expected value, the values emmited from the test, the test body, any messages produced by the assertion, and the store (more on that later)'
+              (is [&test='put foo ' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
+              { (assert foo {|@x| eq $@x foo})[f] { put foo } }
+
+              'The expected value can be the exact value you want, or it can be a description of what you are testing for'
+              (is string-with-foo)
+              { (assert string-with-foo {|@x| str:contains $@x foo})[f] { put '--foo--' } | put (all)[expect] }
+
+              'if your predicate takes a store, then the predicate must emit the store first'
               ]]
