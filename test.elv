@@ -66,12 +66,12 @@ fn assert {
       }
     }
 
+    if (not-eq $err $ok) {
+      set reality = [$err]
+    }
+
     # call predicate
-    var bool @messages = (if (eq $err $ok) {
-        call-predicate $predicate $@reality &fixtures=$fixtures &store=$new-store
-      } else {
-        call-predicate $predicate $err &fixtures=$fixtures &store=$new-store
-    })
+    var bool @messages = (call-predicate $predicate $@reality &fixtures=$fixtures &store=$new-store)
 
     put [&bool=$bool &expect=$expect &reality=$reality
          &test=$test-fn[body] &messages=$messages
@@ -212,11 +212,15 @@ fn test {
 
     put $break
 
-    set subheader @test-elements = $@el
+    if (not-eq (kind-of $el) list) {
+      fail 'expected list or string, got '{(kind-of $el)}
+    }
 
-    if (not-eq (kind-of $header) string) { 
+    if (or (== (count $el) 0) (not-eq (kind-of $el[0]) string)) {
       fail 'missing subheader'
     }
+
+    set subheader @test-elements = $@el
 
     put $subheader
     set subheaders = [$@subheaders $subheader]
@@ -378,7 +382,22 @@ fn md {
   }
 
   var last-reality last-bool
+  var expectations = []
   var in-code-block = $false
+
+  var close-code-block = {
+    echo '```'
+    if (== (count $last-reality) 0) {
+      echo 'MATCHES EXPECTATIONS: `'{(to-string $expectations)}'`'
+    } else {
+      echo '```elvish'
+      each {|l| echo '▶ '{(to-string $l)}} $last-reality
+      echo '```'
+    }
+
+    set in-code-block = $false
+    set expectations = []
+  }
 
   for line $xs {
 
@@ -386,11 +405,7 @@ fn md {
             (or (not-eq (kind-of $line) map) ^
                 (not-eq $last-reality $line[reality]) ^
                 (not-eq $last-bool $line[bool]))) {
-      echo '```'
-      echo '```elvish'
-      each {|l| echo $l} $last-reality
-      echo '```'
-      set in-code-block = $false
+      $close-code-block
     }
 
     if (has-value $subheaders $line) {
@@ -398,24 +413,34 @@ fn md {
     } elif (eq $line $break) {
       echo '***'
     } elif (eq (kind-of $line) string) {
+      echo ' '
       echo $line
     } else {
       set last-reality = $line[reality]
       set last-bool = $line[bool]
+
+      # track expectations
+      if (== (count $expectations) 0) {
+        set expectations = [$line[expect]]
+      } elif (not-eq $expectations[0] $line[expect]) {
+        set expectations = [$line[expect] $@expectations]
+      }
+
       if (not $line[bool]) {
         echo '**STATUS: FAILING**'
       }
+
       if (not $in-code-block) {
         echo '```elvish'
         set in-code-block = $true
       }
+
       format-test $line[test] &fancy=$false | each {|l| echo $@l}
     }
   }
 
   if $in-code-block {
-    echo '```'
-    set in-code-block = $false
+    $close-code-block
   }
 
 }
@@ -569,7 +594,7 @@ var tests = [Tests
               { test [mytests []] }
 
               'This is missing an assertion'
-              { test [mytests { }] }]
+              { test [mytests ['bad test' { }]] }]
              [working-test-runner
               (is-something)
               'an arbitrary number of tests can follow an assertion, and text can be added to describe the tests'

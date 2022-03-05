@@ -1,0 +1,17 @@
+-*-org-mode-*-
+#+TITLE: gendoc
+#+AUTHOR: Daniel Fitzpatrick
+
+* about
+
+Not for users.  This is for devs to generate project documentation.
+
+#+begin_src elvish :tangle ./gendoc.elv
+  use ./test
+
+  fn gendoc {
+    var err = ?(mkdir doc)
+
+    test:test $test:tests | test:md (all) > doc/test.md
+  }
+#+end_src
