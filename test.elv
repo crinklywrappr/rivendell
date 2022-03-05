@@ -382,14 +382,19 @@ fn md {
   }
 
   var last-reality last-bool
+  var num-tests = 0
   var expectations = []
   var in-code-block = $false
 
   var close-code-block = {
-    echo '```'
     if (== (count $last-reality) 0) {
+      echo '```'
       echo 'MATCHES EXPECTATIONS: `'{(to-string $expectations)}'`'
+    } elif (== $num-tests 1) {
+      each {|l| echo '▶ '{(to-string $l)}} $last-reality
+      echo '```'
     } else {
+      echo '```'
       echo '```elvish'
       each {|l| echo '▶ '{(to-string $l)}} $last-reality
       echo '```'
@@ -397,6 +402,7 @@ fn md {
 
     set in-code-block = $false
     set expectations = []
+    set num-tests = 0
   }
 
   for line $xs {
@@ -418,6 +424,7 @@ fn md {
     } else {
       set last-reality = $line[reality]
       set last-bool = $line[bool]
+      set num-tests = (+ $num-tests 1)
 
       # track expectations
       if (== (count $expectations) 0) {
