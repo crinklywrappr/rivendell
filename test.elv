@@ -81,7 +81,7 @@ fn assert {
 
 fn is {
   |expectation &fixtures=[&] &store=[&]|
-  assert $expectation {|@reality| 
+  assert $expectation {|@reality|
     and (== (count $reality) 1) ^
         (eq $expectation $@reality)
   } &name=is &fixtures=$fixtures &store=$store
@@ -89,14 +89,14 @@ fn is {
 
 fn is-each {
   |expectation &fixtures=[&] &store=[&]|
-  assert $expectation {|@reality| 
+  assert $expectation {|@reality|
     eq $expectation $reality
   } &name=is-each &fixtures=$fixtures &store=$store
 }
 
 fn is-error {
   |&fixtures=[&] &store=[&]|
-  assert exception {|@reality| 
+  assert exception {|@reality|
     and (== (count $reality) 1) ^
         (not-eq $@reality $ok) ^
         (eq (kind-of $@reality) exception)
@@ -115,6 +115,13 @@ fn is-something {
             (has-value $kinds float64) ^
             (has-value $kinds string))
   } &name=is-something &fixtures=$fixtures &store=$store
+}
+
+fn is-nothing {
+  |&fixtures=[&] &store=[&]|
+  assert nothing {|@reality|
+    eq $reality []
+  }
 }
 
 fn is-list {
@@ -377,6 +384,7 @@ var tests = [Tests
               { is-each [foo bar] }
               { is-error }
               { is-something }
+              { is-nothing }
               { is-list }
               { is-map }
               { is-coll }

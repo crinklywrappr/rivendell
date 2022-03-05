@@ -127,14 +127,13 @@ Basic building blocks for building additional assertions.
 These are fundamental assertions & simple examples for how to write an
 assertion.
 
-#+TODO: support ~nothing~ assertion - the absence of a value eg ~{ }~
 #+TODO: support ~$ok~ assertion - tests for simple success of test fn
 
 
 #+begin_src elvish :tangle ./test.elv
   fn is {
     |expectation &fixtures=[&] &store=[&]|
-    assert $expectation {|@reality| 
+    assert $expectation {|@reality|
       and (== (count $reality) 1) ^
           (eq $expectation $@reality)
     } &name=is &fixtures=$fixtures &store=$store
@@ -142,14 +141,14 @@ assertion.
 
   fn is-each {
     |expectation &fixtures=[&] &store=[&]|
-    assert $expectation {|@reality| 
+    assert $expectation {|@reality|
       eq $expectation $reality
     } &name=is-each &fixtures=$fixtures &store=$store
   }
 
   fn is-error {
     |&fixtures=[&] &store=[&]|
-    assert exception {|@reality| 
+    assert exception {|@reality|
       and (== (count $reality) 1) ^
           (not-eq $@reality $ok) ^
           (eq (kind-of $@reality) exception)
@@ -168,6 +167,13 @@ assertion.
               (has-value $kinds float64) ^
               (has-value $kinds string))
     } &name=is-something &fixtures=$fixtures &store=$store
+  }
+
+  fn is-nothing {
+    |&fixtures=[&] &store=[&]|
+    assert nothing {|@reality|
+      eq $reality []
+    }
   }
 
   fn is-list {
@@ -461,6 +467,7 @@ Tests for this module
                 { is-each [foo bar] }
                 { is-error }
                 { is-something }
+                { is-nothing }
                 { is-list }
                 { is-map }
                 { is-coll }
