@@ -88,7 +88,7 @@ fn is {
 }
 
 fn is-each {
-  |expectation &fixtures=[&] &store=[&]|
+  |@expectation &fixtures=[&] &store=[&]|
   assert $expectation {|@reality|
     eq $expectation $reality
   } &name=is-each &fixtures=$fixtures &store=$store
@@ -106,13 +106,12 @@ fn is-error {
 fn is-something {
   |&fixtures=[&] &store=[&]|
   assert something {|@reality|
-    var @kinds = (each $kind-of~ $@reality)
+    var @kinds = (each $kind-of~ $reality)
     and (> (count $kinds) 0) ^
         (or (has-value $kinds list) ^
             (has-value $kinds map) ^
             (has-value $kinds fn) ^
             (has-value $kinds num) ^
-            (has-value $kinds float64) ^
             (has-value $kinds string))
   } &name=is-something &fixtures=$fixtures &store=$store
 }
@@ -121,7 +120,7 @@ fn is-nothing {
   |&fixtures=[&] &store=[&]|
   assert nothing {|@reality|
     eq $reality []
-  }
+  } &name=is-nothing &fixtures=$fixtures &store=$store
 }
 
 fn is-list {
@@ -158,26 +157,10 @@ fn is-fn {
 
 fn is-num {
   |&fixtures=[&] &store=[&]|
-  assert num {|@reality|
-    and (== (count $reality) 1) ^
-        (eq (kind-of $@reality) num)
-  } &name=is-num &fixtures=$fixtures &store=$store
-}
-
-fn is-float {
-  |&fixtures=[&] &store=[&]|
-  assert float64 {|@reality|
-    and (== (count $reality) 1) ^
-        (eq (kind-of $@reality) float64)
-  } &name=is-float &fixtures=$fixtures &store=$store
-}
-
-fn is-numeric {
-  |&fixtures=[&] &store=[&]|
   assert number {|@reality|
     and (== (count $reality) 1) ^
-        (has-value [num float64] (kind-of $@reality))
-  } &name=is-numeric &fixtures=$fixtures &store=$store
+        (eq (kind-of $@reality) number)
+  } &name=is-num &fixtures=$fixtures &store=$store
 }
 
 fn is-string {
@@ -244,7 +227,7 @@ fn test {
         }
         var last-test = ($assertion[f] $tel &store=$store)
         set store = $last-test[store]
-        assoc $last-test header $header
+        assoc $last-test subheader $subheader
       } else {
         fail {$tel}' is invalid'
       }
@@ -337,7 +320,7 @@ fn err {
         var reality = (to-string $testmeta[reality])
 
         echo
-        echo ($header-text $testmeta[header])
+        echo ($header-text $testmeta[subheader])
         format-test $testmeta[test] $error-text-code | each {|line| echo $@line}
         echo ($error-text 'EXPECTED: '{$expect})
         echo ($error-text '     GOT: '{$reality})
@@ -381,7 +364,7 @@ var tests = [Tests
               'All other assertions satisfy the predicate'
               { assert foo { put $true } }
               { is foo }
-              { is-each [foo bar] }
+              { is-each foo bar }
               { is-error }
               { is-something }
               { is-nothing }
@@ -390,8 +373,6 @@ var tests = [Tests
               { is-coll }
               { is-fn }
               { is-num }
-              { is-float }
-              { is-numeric }
               { is-string }
               { is-nil }]
 
@@ -407,7 +388,7 @@ var tests = [Tests
               (is bar)
               { call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=bar] }
 
-              (is-each [foo bar])
+              (is-each foo bar)
               { call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=foo] &store=[&x=bar] }
 
               '`call-test` expects fixtures before store.  This test errors because the input args are swapped.'
@@ -443,6 +424,34 @@ var tests = [Tests
               { test [mytest [subheader {|store| put foo} ]] }
 
               'The `store` must be returned as a map'
-              { test [mytest [subheader {|store| put foo; put bar} ]] }
+              { test [mytest [subheader {|store| put foo; put bar} ]] }]
 
+             [high-level-assertions
+              'general use-cases for each assertion'
+              (is $true)
+              { (is foo)[f] { put foo } | put (one)[bool] }
+              { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
+              { (is-error)[f] { fail foobar } | put (one)[bool] }
+              { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
+              { (is-nothing)[f] { } | put (one)[bool] }
+              { (is-list)[f] { put [a b c] } | put (one)[bool] }
+              { (is-map)[f] { put [&foo=bar] } | put (one)[bool] }
+              { (is-fn)[f] { put { } } | put (one)[bool] }
+              { (is-string)[f] { put foo } | put (one)[bool] }
+              { (is-nil)[f] { put $nil } | put (one)[bool] }
+
+              '`is-coll` works on lists and maps'
+              { (is-coll)[f] { put [a b c] } | put (one)[bool] }
+              { (is-coll)[f] { put [&foo=bar] } | put (one)[bool] }
+
+              '`is-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.'
+              { (is-num)[f] { num 1 } | put (one)[bool] }
+              { (is-num)[f] { float64 1 } | put (one)[bool] }
+
+              '`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We don't care about the return value - only that the function works without error'
+              { (is $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
+
+              (is $false)
+              'Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance'
+              { (is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }
               ]]
