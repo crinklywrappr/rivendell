@@ -57,8 +57,8 @@ fn assert {
     var @reality = (var err = ?(call-test $test-fn &fixtures=$fixtures &store=$store))
 
     if (and (eq $err $ok) (has-value $test-fn[arg-names] store)) {
-      if (< (count $reality) 2) {
-        fail 'test '{$test-fn[body]}' took store but did not emit store.  response='{(to-string $reality)}
+      if (== (count $reality) 0) {
+        fail 'Test '{$test-fn[body]}' took store but did not emit store.  Empty response.'
       } elif (not (eq (kind-of $reality[0]) map)) {
         fail 'test '{$test-fn[body]}' took store but did not emit store as a map.  response[0]='{(to-string $reality[0])}
       } else {
@@ -79,12 +79,12 @@ fn assert {
   } &fixtures=$fixtures &store=$store
 }
 
-fn is {
+fn is-one {
   |expectation &fixtures=[&] &store=[&]|
   assert $expectation {|@reality|
     and (== (count $reality) 1) ^
         (eq $expectation $@reality)
-  } &name=is &fixtures=$fixtures &store=$store
+  } &name=is-one &fixtures=$fixtures &store=$store
 }
 
 fn is-each {
@@ -182,6 +182,14 @@ fn is-nil {
 fn test {
   |tests &break=break &docstring='test runner'|
 
+  if (not-eq (kind-of $tests) list) {
+    fail 'tests must be a list'
+  }
+
+  if (eq $tests []) {
+    fail 'missing header'
+  }
+
   var test-elements subheader
   var subheaders = []
   var header @els = $@tests
@@ -223,13 +231,13 @@ fn test {
         set store = $assertion[store]
       } elif (eq (kind-of $tel) fn) {
         if (eq $assertion $nil) {
-          fail 'no assertion set before '{$tel[def]}
+          fail 'no assertion before '{$tel[def]}
         }
         var last-test = ($assertion[f] $tel &store=$store)
         set store = $last-test[store]
         assoc $last-test subheader $subheader
       } else {
-        fail {$tel}' is invalid'
+        fail {(to-string $tel)}' is invalid'
       }
 
     }
@@ -247,18 +255,23 @@ fn format-test {
   }
   var spaces = 0
   var @lines = (re:split \n $body | each {|s| str:trim $s ' '})
+
+  put [(styled (str:from-codepoints 0x250F) white bold)]
+
   for line $lines {
     if (re:match '^}.*' $line) { # ends with }
       set spaces = (- $spaces 2)
     }
 
     put [(styled (str:from-codepoints 0x2503) white bold)
-      ' ' (repeat $spaces ' ' | str:join '')
-    ($style-fn $line)]
+         ' ' (repeat $spaces ' ' | str:join '')
+         ($style-fn $line)]
 
     if (or (re:match '.*{$' $line) ^
-      (re:match '.*\^$' $line) ^
-    (re:match '.*{\ *\|[^\|]*\|$' $line)) {
+           (re:match '.*\^$' $line) ^
+           (and (re:match '.*\[.*' $line) ^
+                (not (re:match '.*\].*' $line))) ^
+           (re:match '.*{\ *\|[^\|]*\|$' $line)) {
       set spaces = (+ $spaces 2)
     }
   }
@@ -363,7 +376,7 @@ var tests = [Tests
 
               'All other assertions satisfy the predicate'
               { assert foo { put $true } }
-              { is foo }
+              { is-one foo }
               { is-each foo bar }
               { is-error }
               { is-something }
@@ -379,13 +392,13 @@ var tests = [Tests
              [helpers
               'These functions are useful if you are writing a low-level assertion like `assert`.  Your test function can be one of four forms, and `call-test` will dispatch based on argument-reflection.'
               'The following tests demonstrate that type of dispatch.'
-              (is something)
+              (is-one something)
               { call-test {|| put something} }
 
-              (is foo)
+              (is-one foo)
               { call-test {|store| put $store[x]} &store=[&x=foo] }
 
-              (is bar)
+              (is-one bar)
               { call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=bar] }
 
               (is-each foo bar)
@@ -396,7 +409,7 @@ var tests = [Tests
               { call-test {|store fixtures| put $fixtures[a]; put $store[b]} &fixtures=[&a=a] &store=[&b=b] }
 
               '`call-predicate` accepts two forms.'
-              (is $true)
+              (is-one $true)
               { call-predicate {|@reality| eq $@reality foo} foo }
               { call-predicate {|@reality &fixtures=[&] &store=[&]|
                                   == ($reality[0] $fixtures[x] $store[x]) -1
@@ -409,11 +422,11 @@ var tests = [Tests
 
              [assert
               'assertions return the boolean result, the expected value, the values emmited from the test, the test body, any messages produced by the assertion, and the store (more on that later)'
-              (is [&test='put foo ' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
+              (is-one [&test='put foo ' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
               { (assert foo {|@x| eq $@x foo})[f] { put foo } }
 
               'The expected value can be the exact value you want, or it can be a description of what you are testing for'
-              (is string-with-foo)
+              (is-one string-with-foo)
               { (assert string-with-foo {|@x| str:contains $@x foo})[f] { put '--foo--' } | put (all)[expect] }
 
               'if your predicate takes a store, then the predicate must emit the store first'
@@ -428,8 +441,8 @@ var tests = [Tests
 
              [high-level-assertions
               'general use-cases for each assertion'
-              (is $true)
-              { (is foo)[f] { put foo } | put (one)[bool] }
+              (is-one $true)
+              { (is-one foo)[f] { put foo } | put (one)[bool] }
               { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
               { (is-error)[f] { fail foobar } | put (one)[bool] }
               { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
@@ -448,10 +461,89 @@ var tests = [Tests
               { (is-num)[f] { num 1 } | put (one)[bool] }
               { (is-num)[f] { float64 1 } | put (one)[bool] }
 
-              '`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We don't care about the return value - only that the function works without error'
-              { (is $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
+              '`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We don not care about the return value - only that the function works without error'
+              { (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
 
-              (is $false)
+              (is-one $false)
               'Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance'
-              { (is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }
-              ]]
+              { (is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }]
+
+             [test-runner-exceptions
+              'The test runner emits information suitable for debugging and documentation.  Start by giving it nothing.'
+              (is-error)
+              { test $nil }
+
+              'It should have told you it expects a list.  Give it a list.'
+              { test [] }
+
+              'Now it is complaining about a missing header.  Give it a header.'
+              (is-something)
+              { test [mytests] }
+
+              'Our first victory!  But we have no tests yet.  A test is a function preceded by an assertion.  They are grouped in sub-lists.  First, test all the ways we can get that wrong.'
+              (is-error)
+
+              '$nil is not a list'
+              { test [mytests $nil] }
+
+              'This is missing a subheader'
+              { test [mytests []] }
+
+              'This is missing an assertion'
+              { test [mytests { }] }]
+             [working-test-runner
+              (is-something)
+              'an arbitrary number of tests can follow an assertion, and text can be added to describe the tests'
+              { test [mytests
+                      [foo-tests
+                      'All of the assertions the string "foo" satisfies'
+                      (is-string)
+                      { put foo }
+
+                      (is-something)
+                      { put foo}
+
+                      'Really, text can be added anywhere'
+                      (is-one foo)
+                      { put foo }]] }
+
+              'Assertions which compose other assertions and predicates are planned.'
+
+              'Fixtures can be supplied to tests.  They must be maps set in the assertion.'
+              { test [mytests
+                      [fixture-test
+                       (is-one bar &fixtures=[&foo=bar])
+                       {|fixtures| put $fixtures[foo]}]]}
+
+              'Stores can be supplied to tests, too.  These must be maps, too.  Stores persist changes from test to test and are reset with every assertion.'
+              { test [mytests
+                      [store-test
+                       (assert whaky-test {|@results &fixtures=[&] &store=[&]|
+                         if (eq $store[x] foo) {
+                           eq $store[y] bar
+                         } elif (eq $store[x] bar) {
+                           eq $store[y] foo
+                         }
+                       })
+                       {|store| assoc $store x foo | assoc (one) y bar }
+                       {|store|
+                         if (eq $store[x] foo) {
+                           put (assoc $store x bar | assoc $store y foo)
+                         } else {
+                           put [&]
+                         }
+                       }]]}
+
+              'A store can be initialized from an assertion also.'
+              { test [mytests
+                      [store-test
+                       (is-one bar &store=[&foo=bar])
+                       {|store| put $store; put $store[foo]}]]}
+
+              'However, when taking a store, the store must be the first element returned, even if no changes are made'
+              (is-error)
+              { test [mytests
+                      [store-test
+                       (is-one bar &store=[&foo=bar])
+                       {|store| put $store[foo]}]]}
+             ]]
