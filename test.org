@@ -93,26 +93,27 @@ Basic building blocks for building additional assertions.
     make-assertion $name {
       |test-fn &store=[&]|
 
-      var new-store = [&]
-      var reality err
+      var new-store = $store
 
       # call test
-      if (has-value $test-fn[arg-names] store) {
-        set new-store @reality = (set err = ?(call-test $test-fn &fixtures=[&] &store=[&]))
-      } else {
-        set @reality = (set err = ?(call-test $test-fn &fixtures=[&] &store=[&]))
+      var @reality = (var err = ?(call-test $test-fn &fixtures=$fixtures &store=$store))
+
+      if (and (eq $err $ok) (has-value $test-fn[arg-names] store)) {
+        if (< (count $reality) 2) {
+          fail 'test '{$test-fn[body]}' took store but did not emit store.  response='{(to-string $reality)}
+        } elif (not (eq (kind-of $reality[0]) map)) {
+          fail 'test '{$test-fn[body]}' took store but did not emit store as a map.  response[0]='{(to-string $reality[0])}
+        } else {
+          set new-store @reality = $@reality
+        }
       }
 
       # call predicate
       var bool @messages = (if (eq $err $ok) {
-          if (> (count $reality) 0) {
-            call-predicate $predicate $@reality &fixtures=$fixtures &store=$store
-          } else {
-            put $false "test produced no values"
-          }
+          call-predicate $predicate $@reality &fixtures=$fixtures &store=$new-store
         } else {
-          call-predicate $predicate $err &fixtures=$fixtures &store=$store
-        })
+          call-predicate $predicate $err &fixtures=$fixtures &store=$new-store
+      })
 
       put [&bool=$bool &expect=$expect &reality=$reality
            &test=$test-fn[body] &messages=$messages
@@ -249,7 +250,7 @@ assertion.
   fn test {
     |tests &break=break &docstring='test runner'|
 
-    var test-elements
+    var test-elements subheader
     var subheaders = []
     var header @els = $@tests
 
@@ -271,19 +272,18 @@ assertion.
 
       put $break
 
-      set header @test-elements = $@el
+      set subheader @test-elements = $@el
 
       if (not-eq (kind-of $header) string) { 
         fail 'missing subheader'
       }
 
-      put $header
-      set subheaders = [$@subheaders $header]
+      put $subheader
+      set subheaders = [$@subheaders $subheader]
+
+      var store
 
       for tel $test-elements {
-
-        var last-test store
-
         if (eq (kind-of $tel) string) {
           put $tel
         } elif (is-assertion $tel) {
@@ -293,7 +293,7 @@ assertion.
           if (eq $assertion $nil) {
             fail 'no assertion set before '{$tel[def]}
           }
-          set last-test = ($assertion[f] $tel &store=$store)
+          var last-test = ($assertion[f] $tel &store=$store)
           set store = $last-test[store]
           assoc $last-test header $header
         } else {
@@ -512,5 +512,14 @@ Tests for this module
                 { (assert string-with-foo {|@x| str:contains $@x foo})[f] { put '--foo--' } | put (all)[expect] }
 
                 'if your predicate takes a store, then the predicate must emit the store first'
+                (assert [&foo=bar] {|@result &store=[&] &fixtures=[&]| eq $store[foo] bar})
+                {|store| assoc $store foo bar; put foo }
+
+                (is-error)
+                { test [mytest [subheader {|store| put foo} ]] }
+
+                'The `store` must be returned as a map'
+                { test [mytest [subheader {|store| put foo; put bar} ]] }
+
                 ]]
 #+end_src
