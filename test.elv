@@ -528,7 +528,7 @@ var tests = [Tests
                        {|store| assoc $store x foo | assoc (one) y bar }
                        {|store|
                          if (eq $store[x] foo) {
-                           put (assoc $store x bar | assoc $store y foo)
+                           assoc $store x bar | assoc (one) y foo
                          } else {
                            put [&]
                          }
