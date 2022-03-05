@@ -248,7 +248,7 @@ fn test {
 }
 
 fn format-test {
-  |body style-fn|
+  |body &style-fn={|s| put $s} &fancy=$true|
   if (not (re:match \n $body)) {
     put [($style-fn $body)]
     return
@@ -256,16 +256,23 @@ fn format-test {
   var spaces = 0
   var @lines = (re:split \n $body | each {|s| str:trim $s ' '})
 
-  put [(styled (str:from-codepoints 0x250F) white bold)]
+  if $fancy {
+    put [(styled (str:from-codepoints 0x250F) white bold)]
+  }
 
   for line $lines {
     if (re:match '^}.*' $line) { # ends with }
       set spaces = (- $spaces 2)
     }
 
-    put [(styled (str:from-codepoints 0x2503) white bold)
-         ' ' (repeat $spaces ' ' | str:join '')
-         ($style-fn $line)]
+    if $fancy {
+      put [(styled (str:from-codepoints 0x2503) white bold)
+           ' ' (repeat $spaces ' ' | str:join '')
+           ($style-fn $line)]
+    } else {
+      put [' ' (repeat $spaces ' ' | str:join '')
+           ($style-fn $line)]
+    }
 
     if (or (re:match '.*{$' $line) ^
            (re:match '.*\^$' $line) ^
@@ -298,12 +305,12 @@ fn plain {
     } elif (eq (kind-of $x) map) {
       set testmeta = $x
       if $testmeta[bool] {
-        format-test $testmeta[test] $success-text | each {|line| echo $@line}
+        format-test $testmeta[test] &style-fn=$success-text | each {|line| echo $@line}
       } else {
         var expect = (to-string $testmeta[expect])
         var reality = (to-string $testmeta[reality])
         echo
-        format-test $testmeta[test] $error-text-code | each {|line| echo $@line}
+        format-test $testmeta[test] &style-fn=$error-text-code | each {|line| echo $@line}
         echo ($error-text 'EXPECTED: '{$expect})
         echo ($error-text '     GOT: '{$reality})
         echo
@@ -334,7 +341,7 @@ fn err {
 
         echo
         echo ($header-text $testmeta[subheader])
-        format-test $testmeta[test] $error-text-code | each {|line| echo $@line}
+        format-test $testmeta[test] &style-fn=$error-text-code | each {|line| echo $@line}
         echo ($error-text 'EXPECTED: '{$expect})
         echo ($error-text '     GOT: '{$reality})
 
@@ -356,6 +363,78 @@ fn err {
       }
     }
   }
+
+}
+
+fn md {
+  |break header @xs subheaders|
+
+  echo '# '{$header}
+
+  var i = 1
+  for subheader $subheaders {
+    echo {$i}'. ['{$subheader}'](#'{$subheader}')'
+    set i = (+ $i 1)
+  }
+
+  var last-reality last-bool
+  var in-code-block = $false
+
+  for line $xs {
+
+    if (and $in-code-block ^
+            (or (not-eq (kind-of $line) map) ^
+                (not-eq $last-reality $line[reality]) ^
+                (not-eq $last-bool $line[bool]))) {
+      echo '```'
+      echo '```elvish'
+      each {|l| echo $l} $last-reality
+      echo '```'
+      set in-code-block = $false
+    }
+
+    if (has-value $subheaders $line) {
+      echo '## '{$line}
+    } elif (eq $line $break) {
+      echo '***'
+    } elif (eq (kind-of $line) string) {
+      echo $line
+    } else {
+      set last-reality = $line[reality]
+      set last-bool = $line[bool]
+      if (not $line[bool]) {
+        echo '**STATUS: FAILING**'
+      }
+      if (not $in-code-block) {
+        echo '```elvish'
+        set in-code-block = $true
+      }
+      format-test $line[test] &fancy=$false | each {|l| echo $@l}
+    }
+  }
+
+  if $in-code-block {
+    echo '```'
+    set in-code-block = $false
+  }
+
+}
+
+fn md-show {
+  |@markdown|
+
+  if (not-eq $ok ?(which glow)) {
+    echo 'Glow required: https://github.com/charmbracelet/glow'
+    return
+  }
+
+  var tmp = (mktemp rivglow-XXXXXXXXXX.md)
+
+  for line $markdown {
+    echo $line >> $tmp
+  }
+
+  glow $tmp
 
 }
 
