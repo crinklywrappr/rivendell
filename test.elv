@@ -403,7 +403,7 @@ fn md {
 
   echo '# '{$header}
 
-  echo '1. [testing-status](#testing-status})'
+  echo '1. [testing-status](#testing-status)'
 
   var i = 2
   for subheader $subheaders {
