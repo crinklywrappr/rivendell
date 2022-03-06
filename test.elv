@@ -54,7 +54,8 @@ fn assert {
     var new-store = $store
 
     # call test
-    var @reality = (var err = ?(call-test $test-fn &fixtures=$fixtures &store=$store))
+    var @res = (var err = ?(call-test $test-fn &fixtures=$fixtures &store=$store))
+    var reality = $res
 
     if (and (eq $err $ok) (has-value $test-fn[arg-names] store)) {
       if (== (count $reality) 0) {
@@ -68,13 +69,14 @@ fn assert {
 
     if (not-eq $err $ok) {
       set reality = [$err]
+      set res = [$err]
     }
 
     # call predicate
     var bool @messages = (call-predicate $predicate $@reality &fixtures=$fixtures &store=$new-store)
 
-    put [&bool=$bool &expect=$expect &reality=$reality
-         &test=$test-fn[body] &messages=$messages
+    put [&bool=$bool &expect=$expect &reality=$res
+         &test=(str:trim $test-fn[body] ' ') &messages=$messages
          &store=$new-store]
   } &fixtures=$fixtures &store=$store
 }
@@ -472,48 +474,46 @@ fn md-show {
 
 var tests = [Tests
              [make-assertion
+              'lowest-level building-block for constructing assertions.  The makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
               (is-map)
               { make-assertion foo { } }
-              { make-assertion foo { } &fixtures=[&]}
-              { make-assertion foo { } &store=[&]}
-              { make-assertion foo { } &fixtures=[&] &store=[&]}]
+              { make-assertion foo { } &fixtures=[&foo=bar]}
+              { make-assertion foo { } &store=[&frob=nitz]}
+              { make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]}]
 
              [is-assertion
-              (assert assertion $is-assertion~)
-              { make-assertion foo { put foo } }
+              '`is-assertion` is a predicate for assertions.'
+              (is-one $true)
+              { make-assertion foo { put foo } | is-assertion (one) }
 
               '`is-assertion` only cares about the presence of `f` key'
-              { make-assertion foo { } | dissoc (all) fixtures | dissoc (all) store }
+    { make-assertion foo { } | dissoc (one) fixtures | dissoc (one) store | is-assertion (one) }
 
               'All other assertions satisfy the predicate'
-              { assert foo { put $true } }
-              { is-one foo }
-              { is-each foo bar }
-              { is-error }
-              { is-something }
-              { is-nothing }
-              { is-list }
-              { is-map }
-              { is-coll }
-              { is-fn }
-              { is-num }
-              { is-string }
-              { is-nil }]
+              { assert foo { put $true } | is-assertion (one) }
+              { is-one foo | is-assertion (one) }
+              { is-each foo bar | is-assertion (one) }
+              { is-error | is-assertion (one) }
+              { is-something | is-assertion (one) }
+              { is-nothing | is-assertion (one) }
+              { is-list | is-assertion (one) }
+              { is-map | is-assertion (one) }
+              { is-coll | is-assertion (one) }
+              { is-fn | is-assertion (one) }
+              { is-num | is-assertion (one) }
+              { is-string | is-assertion (one) }
+              { is-nil | is-assertion (one) }]
 
              [helpers
               'These functions are useful if you are writing a low-level assertion like `assert`.  Your test function can be one of four forms, and `call-test` will dispatch based on argument-reflection.'
               'The following tests demonstrate that type of dispatch.'
               (is-one something)
               { call-test {|| put something} }
+              { call-test {|store| put $store[x]} &store=[&x=something] }
+              { call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=something] }
 
-              (is-one foo)
-              { call-test {|store| put $store[x]} &store=[&x=foo] }
-
-              (is-one bar)
-              { call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=bar] }
-
-              (is-each foo bar)
-              { call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=foo] &store=[&x=bar] }
+              (is-each some thing)
+              { call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=some] &store=[&x=thing] }
 
               '`call-test` expects fixtures before store.  This test errors because the input args are swapped.'
               (is-error)
@@ -533,7 +533,7 @@ var tests = [Tests
 
              [assert
               'assertions return the boolean result, the expected value, the values emmited from the test, the test body, any messages produced by the assertion, and the store (more on that later)'
-              (is-one [&test='put foo ' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
+              (is-one [&test='put foo' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
               { (assert foo {|@x| eq $@x foo})[f] { put foo } }
 
               'The expected value can be the exact value you want, or it can be a description of what you are testing for'
@@ -548,7 +548,7 @@ var tests = [Tests
               { test [mytest [subheader {|store| put foo} ]] }
 
               'The `store` must be returned as a map'
-              { test [mytest [subheader {|store| put foo; put bar} ]] }]
+              { test [mytest [subheader (is-one bar) {|store| put foo; put bar} ]] }]
 
              [high-level-assertions
               'general use-cases for each assertion'

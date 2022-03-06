@@ -8,87 +8,57 @@
 7. [working-test-runner](#working-test-runner)
 ***
 ## make-assertion
+ 
+lowest-level building-block for constructing assertions.  The makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
-make-assertion foo { } 
-▶ [&name=foo &f=<closure 0xc000347a40> &store=[&] &fixtures=[&]]
+make-assertion foo { }
+▶ [&name=foo &f=<closure 0xc00032f200> &store=[&] &fixtures=[&]]
 ```
 ```elvish
-make-assertion foo { } &fixtures=[&]
-▶ [&name=foo &f=<closure 0xc000378540> &store=[&] &fixtures=[&]]
+make-assertion foo { } &fixtures=[&foo=bar]
+▶ [&name=foo &f=<closure 0xc000352600> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
-make-assertion foo { } &store=[&]
-▶ [&name=foo &f=<closure 0xc000346000> &store=[&] &fixtures=[&]]
+make-assertion foo { } &store=[&frob=nitz]
+▶ [&name=foo &f=<closure 0xc000290000> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
-make-assertion foo { } &fixtures=[&] &store=[&]
-▶ [&name=foo &f=<closure 0xc0003ac9c0> &store=[&] &fixtures=[&]]
+make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
+▶ [&name=foo &f=<closure 0xc0003526c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
+ 
+`is-assertion` is a predicate for assertions.
 ```elvish
-make-assertion foo { put foo } 
-▶ [&name=foo &f=<closure 0xc000338f00> &store=[&] &fixtures=[&]]
+make-assertion foo { put foo } | is-assertion (one)
+▶ $true
 ```
  
 `is-assertion` only cares about the presence of `f` key
 ```elvish
-make-assertion foo { } | dissoc (all) fixtures | dissoc (all) store 
-▶ [&name=foo &f=<closure 0xc000318fc0>]
+make-assertion foo { } | dissoc (one) fixtures | dissoc (one) store | is-assertion (one)
+▶ $true
 ```
  
 All other assertions satisfy the predicate
 ```elvish
-assert foo { put $true } 
-▶ [&name=assert &f=<closure 0xc000379080> &store=[&] &fixtures=[&]]
+assert foo { put $true } | is-assertion (one)
+is-one foo | is-assertion (one)
+is-each foo bar | is-assertion (one)
+is-error | is-assertion (one)
+is-something | is-assertion (one)
+is-nothing | is-assertion (one)
+is-list | is-assertion (one)
+is-map | is-assertion (one)
+is-coll | is-assertion (one)
+is-fn | is-assertion (one)
+is-num | is-assertion (one)
+is-string | is-assertion (one)
+is-nil | is-assertion (one)
 ```
 ```elvish
-is-one foo 
-▶ [&name=is-one &f=<closure 0xc00034c600> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-each foo bar 
-▶ [&name=is-each &f=<closure 0xc000379680> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-error 
-▶ [&name=is-error &f=<closure 0xc000739980> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-something 
-▶ [&name=is-something &f=<closure 0xc00034d200> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-nothing 
-▶ [&name=is-nothing &f=<closure 0xc00034c6c0> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-list 
-▶ [&name=is-list &f=<closure 0xc000318240> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-map 
-▶ [&name=is-map &f=<closure 0xc000346540> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-coll 
-▶ [&name=is-coll &f=<closure 0xc0003ac000> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-fn 
-▶ [&name=is-fn &f=<closure 0xc0003accc0> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-num 
-▶ [&name=is-num &f=<closure 0xc0003acf00> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-string 
-▶ [&name=is-string &f=<closure 0xc00034d380> &store=[&] &fixtures=[&]]
-```
-```elvish
-is-nil 
-▶ [&name=is-nil &f=<closure 0xc0003adb00> &store=[&] &fixtures=[&]]
+▶ $true
 ```
 ***
 ## helpers
@@ -97,32 +67,28 @@ These functions are useful if you are writing a low-level assertion like `assert
  
 The following tests demonstrate that type of dispatch.
 ```elvish
-call-test {|| put something} 
+call-test {|| put something}
+call-test {|store| put $store[x]} &store=[&x=something]
+call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=something]
+```
+```elvish
 ▶ something
 ```
 ```elvish
-call-test {|store| put $store[x]} &store=[&x=foo] 
-▶ foo
-```
-```elvish
-call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=bar] 
-▶ bar
-```
-```elvish
-call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=foo] &store=[&x=bar] 
-▶ foo
-▶ bar
+call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=some] &store=[&x=thing]
+▶ some
+▶ thing
 ```
  
 `call-test` expects fixtures before store.  This test errors because the input args are swapped.
 ```elvish
-call-test {|store fixtures| put $fixtures[a]; put $store[b]} &fixtures=[&a=a] &store=[&b=b] 
+call-test {|store fixtures| put $fixtures[a]; put $store[b]} &fixtures=[&a=a] &store=[&b=b]
 ▶ [&reason=<unknown no such key: a>]
 ```
  
 `call-predicate` accepts two forms.
 ```elvish
-call-predicate {|@reality| eq $@reality foo} foo 
+call-predicate {|@reality| eq $@reality foo} foo
    call-predicate {|@reality &fixtures=[&] &store=[&]|
      == ($reality[0] $fixtures[x] $store[x]) -1
    } $compare~ &fixtures=[&x=1] &store=[&x=2]
@@ -133,11 +99,11 @@ call-predicate {|@reality| eq $@reality foo} foo
  
 Any other form will error
 ```elvish
-call-predicate {|@reality &store=[&]| eq $@reality foo} foo 
+call-predicate {|@reality &store=[&]| eq $@reality foo} foo
 ▶ [&reason=<unknown unsupported option: fixtures>]
 ```
 ```elvish
-call-predicate {|@reality &fixtures=[&]| eq $@reality foo} foo 
+call-predicate {|@reality &fixtures=[&]| eq $@reality foo} foo
 ▶ [&reason=<unknown unsupported option: store>]
 ```
 ***
@@ -145,46 +111,47 @@ call-predicate {|@reality &fixtures=[&]| eq $@reality foo} foo
  
 assertions return the boolean result, the expected value, the values emmited from the test, the test body, any messages produced by the assertion, and the store (more on that later)
 ```elvish
-(assert foo {|@x| eq $@x foo})[f] { put foo } 
-▶ [&test='put foo ' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]]
+(assert foo {|@x| eq $@x foo})[f] { put foo }
+▶ [&test='put foo' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]]
 ```
  
 The expected value can be the exact value you want, or it can be a description of what you are testing for
 ```elvish
-(assert string-with-foo {|@x| str:contains $@x foo})[f] { put '--foo--' } | put (all)[expect] 
+(assert string-with-foo {|@x| str:contains $@x foo})[f] { put '--foo--' } | put (all)[expect]
 ▶ string-with-foo
 ```
  
 if your predicate takes a store, then the predicate must emit the store first
 ```elvish
- assoc $store foo bar; put foo 
+assoc $store foo bar; put foo
+▶ [&foo=bar]
 ▶ foo
 ```
 ```elvish
-test [mytest [subheader {|store| put foo} ]] 
+test [mytest [subheader {|store| put foo} ]]
 ▶ [&reason=[&content='no assertion before {|store| put foo}' &type=fail]]
 ```
  
 The `store` must be returned as a map
 ```elvish
-test [mytest [subheader {|store| put foo; put bar} ]] 
-▶ [&reason=[&content='no assertion before {|store| put foo; put bar}' &type=fail]]
+test [mytest [subheader (is-one bar) {|store| put foo; put bar} ]]
+▶ [&reason=[&content='test  put foo; put bar took store but did not emit store as a map.  response[0]=foo' &type=fail]]
 ```
 ***
 ## high-level-assertions
  
 general use-cases for each assertion
 ```elvish
-(is-one foo)[f] { put foo } | put (one)[bool] 
-(is-each foo bar)[f] { put foo; put bar } | put (one)[bool] 
-(is-error)[f] { fail foobar } | put (one)[bool] 
-(is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] 
-(is-nothing)[f] { } | put (one)[bool] 
-(is-list)[f] { put [a b c] } | put (one)[bool] 
-(is-map)[f] { put [&foo=bar] } | put (one)[bool] 
-(is-fn)[f] { put { } } | put (one)[bool] 
-(is-string)[f] { put foo } | put (one)[bool] 
-(is-nil)[f] { put $nil } | put (one)[bool] 
+(is-one foo)[f] { put foo } | put (one)[bool]
+(is-each foo bar)[f] { put foo; put bar } | put (one)[bool]
+(is-error)[f] { fail foobar } | put (one)[bool]
+(is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool]
+(is-nothing)[f] { } | put (one)[bool]
+(is-list)[f] { put [a b c] } | put (one)[bool]
+(is-map)[f] { put [&foo=bar] } | put (one)[bool]
+(is-fn)[f] { put { } } | put (one)[bool]
+(is-string)[f] { put foo } | put (one)[bool]
+(is-nil)[f] { put $nil } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
@@ -192,8 +159,8 @@ general use-cases for each assertion
  
 `is-coll` works on lists and maps
 ```elvish
-(is-coll)[f] { put [a b c] } | put (one)[bool] 
-(is-coll)[f] { put [&foo=bar] } | put (one)[bool] 
+(is-coll)[f] { put [a b c] } | put (one)[bool]
+(is-coll)[f] { put [&foo=bar] } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
@@ -201,8 +168,8 @@ general use-cases for each assertion
  
 `is-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.
 ```elvish
-(is-num)[f] { num 1 } | put (one)[bool] 
-(is-num)[f] { float64 1 } | put (one)[bool] 
+(is-num)[f] { num 1 } | put (one)[bool]
+(is-num)[f] { float64 1 } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
@@ -210,13 +177,13 @@ general use-cases for each assertion
  
 `is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We don not care about the return value - only that the function works without error
 ```elvish
-(is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] 
+(is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool]
 ▶ $true
 ```
  
 Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance
 ```elvish
-(is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] 
+(is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool]
 ▶ $false
 ```
 ***
@@ -224,19 +191,19 @@ Simply returning something is not enough for `is-something`.  A bunch of `$nil` 
  
 The test runner emits information suitable for debugging and documentation.  Start by giving it nothing.
 ```elvish
-test $nil 
+test $nil
 ▶ [&reason=[&content='tests must be a list' &type=fail]]
 ```
  
 It should have told you it expects a list.  Give it a list.
 ```elvish
-test [] 
+test []
 ▶ [&reason=[&content='missing header' &type=fail]]
 ```
  
 Now it is complaining about a missing header.  Give it a header.
 ```elvish
-test [mytests] 
+test [mytests]
 ▶ break
 ▶ mytests
 ▶ []
@@ -246,19 +213,19 @@ Our first victory!  But we have no tests yet.  A test is a function preceded by 
  
 $nil is not a list
 ```elvish
-test [mytests $nil] 
+test [mytests $nil]
 ▶ [&reason=[&content='expected list or string, got nil' &type=fail]]
 ```
  
 This is missing a subheader
 ```elvish
-test [mytests []] 
+test [mytests []]
 ▶ [&reason=[&content='missing subheader' &type=fail]]
 ```
  
 This is missing an assertion
 ```elvish
-test [mytests ['bad test' { }]] 
+test [mytests ['bad test' { }]]
 ▶ [&reason=[&content='no assertion before { }' &type=fail]]
 ```
 ***
@@ -283,10 +250,10 @@ an arbitrary number of tests can follow an assertion, and text can be added to d
 ▶ break
 ▶ foo-tests
 ▶ All of the assertions the string "foo" satisfies
-▶ [&test='put foo ' &expect=string &bool=$true &store=[&] &subheader=foo-tests &messages=[] &reality=[foo]]
+▶ [&test='put foo' &expect=string &bool=$true &store=[&] &subheader=foo-tests &messages=[] &reality=[foo]]
 ▶ [&test='put foo' &expect=something &bool=$true &store=[&] &subheader=foo-tests &messages=[] &reality=[foo]]
 ▶ Really, text can be added anywhere
-▶ [&test='put foo ' &expect=foo &bool=$true &store=[&] &subheader=foo-tests &messages=[] &reality=[foo]]
+▶ [&test='put foo' &expect=foo &bool=$true &store=[&] &subheader=foo-tests &messages=[] &reality=[foo]]
 ▶ [foo-tests]
 ```
  
@@ -302,7 +269,7 @@ Fixtures can be supplied to tests.  They must be maps set in the assertion.
 ▶ mytests
 ▶ break
 ▶ fixture-test
-▶ [&test=' put $fixtures[foo]' &expect=bar &bool=$true &store=[&] &subheader=fixture-test &messages=[] &reality=[bar]]
+▶ [&test='put $fixtures[foo]' &expect=bar &bool=$true &store=[&] &subheader=fixture-test &messages=[] &reality=[bar]]
 ▶ [fixture-test]
 ```
  
@@ -329,8 +296,8 @@ Stores can be supplied to tests, too.  These must be maps, too.  Stores persist 
 ▶ mytests
 ▶ break
 ▶ store-test
-▶ [&test=' assoc $store x foo | assoc (one) y bar ' &expect=whaky-test &bool=$true &store=[&x=foo &y=bar] &subheader=store-test &messages=[] &reality=[]]
-▶ [&test="\n                         if (eq $store[x] foo) {\n                           assoc $store x bar | assoc (one) y foo\n                         } else {\n                           put [&]\n                         }\n                       " &expect=whaky-test &bool=$true &store=[&x=bar &y=foo] &subheader=store-test &messages=[] &reality=[]]
+▶ [&test='assoc $store x foo | assoc (one) y bar' &expect=whaky-test &bool=$true &store=[&x=foo &y=bar] &subheader=store-test &messages=[] &reality=[[&x=foo &y=bar]]]
+▶ [&test="\n                         if (eq $store[x] foo) {\n                           assoc $store x bar | assoc (one) y foo\n                         } else {\n                           put [&]\n                         }\n" &expect=whaky-test &bool=$true &store=[&x=bar &y=foo] &subheader=store-test &messages=[] &reality=[[&x=bar &y=foo]]]
 ▶ [store-test]
 ```
  
@@ -344,7 +311,7 @@ A store can be initialized from an assertion also.
 ▶ mytests
 ▶ break
 ▶ store-test
-▶ [&test=' put $store; put $store[foo]' &expect=bar &bool=$true &store=[&foo=bar] &subheader=store-test &messages=[] &reality=[bar]]
+▶ [&test='put $store; put $store[foo]' &expect=bar &bool=$true &store=[&foo=bar] &subheader=store-test &messages=[] &reality=[[&foo=bar] bar]]
 ▶ [store-test]
 ```
  
