@@ -253,6 +253,30 @@ fn test {
   put $subheaders
 }
 
+fn is-test {
+  |x|
+  and (eq (kind-of $x) map) ^
+      (has-key $x bool) ^
+      (has-key $x expect) ^
+      (has-key $x reality) ^
+      (has-key $x test) ^
+      (has-key $x messages) ^
+      (has-key $x store)
+}
+
+fn stats {
+  |@xs|
+
+  var @tests = (each {|x| if (is-test $x) { put $x }} $xs)
+  var @working-tests = (each {|t| if (eq $t[bool] $true) { put $t }} $tests)
+
+  echo {(count $working-tests)}' tests passed out of '{(count $tests)}
+  echo
+  echo {(* 100 (/ (count $working-tests) (count $tests)))}'% of tests are passing'
+  echo
+
+}
+
 fn format-test {
   |body &style-fn={|s| put $s} &fancy=$true|
   if (not (re:match \n $body)) {
@@ -323,6 +347,8 @@ fn plain {
       }
     }
   }
+
+  stats $@xs
 }
 
 fn err {
@@ -377,11 +403,17 @@ fn md {
 
   echo '# '{$header}
 
-  var i = 1
+  echo '1. [testing-status](#testing-status})'
+
+  var i = 2
   for subheader $subheaders {
     echo {$i}'. ['{$subheader}'](#'{$subheader}')'
     set i = (+ $i 1)
   }
+
+  echo '***'
+  echo '## testing-status'
+  stats $@xs
 
   var last-reality last-bool
   var num-tests = 0

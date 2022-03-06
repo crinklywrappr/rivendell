@@ -1,30 +1,37 @@
 # Tests
-1. [make-assertion](#make-assertion)
-2. [is-assertion](#is-assertion)
-3. [helpers](#helpers)
-4. [assert](#assert)
-5. [high-level-assertions](#high-level-assertions)
-6. [test-runner-exceptions](#test-runner-exceptions)
-7. [working-test-runner](#working-test-runner)
+1. [testing-status](#testing-status})
+2. [make-assertion](#make-assertion)
+3. [is-assertion](#is-assertion)
+4. [helpers](#helpers)
+5. [assert](#assert)
+6. [high-level-assertions](#high-level-assertions)
+7. [test-runner-exceptions](#test-runner-exceptions)
+8. [working-test-runner](#working-test-runner)
+***
+## testing-status
+60 tests passed out of 60
+
+100% of tests are passing
+
 ***
 ## make-assertion
  
 lowest-level building-block for constructing assertions.  The makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { }
-▶ [&name=foo &f=<closure 0xc00032f200> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0002ab740> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc000352600> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000293680> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000290000> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0002abd40> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0003526c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000278780> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion

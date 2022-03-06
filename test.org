@@ -3,8 +3,6 @@
 #+AUTHOR: Daniel Fitzpatrick
 #+OPTIONS: toc:t
 
-#+TODO: show statistics somewhere
-
 * about
 
 The test module provides the following
@@ -19,6 +17,7 @@ Reporters emit text.  The test module provides the following reporters.
 - md: Markdown which is sutable for documentation
 - err: colorized text which provides information about failed tests
 - plain: colorized text which provides information about all tests
+- stats: statistics about tests
 
 
 The test module should only depend on modules available in elvish core.
@@ -315,6 +314,37 @@ assertion.
 #+end_src
 
 
+* stats reporter
+
+Currently this only reports success/total.  Much more could be added in the future.
+
+#+begin_src elvish :tangle ./test.elv
+  fn is-test {
+    |x|
+    and (eq (kind-of $x) map) ^
+        (has-key $x bool) ^
+        (has-key $x expect) ^
+        (has-key $x reality) ^
+        (has-key $x test) ^
+        (has-key $x messages) ^
+        (has-key $x store)
+  }
+
+  fn stats {
+    |@xs|
+
+    var @tests = (each {|x| if (is-test $x) { put $x }} $xs)
+    var @working-tests = (each {|t| if (eq $t[bool] $true) { put $t }} $tests)
+
+    echo {(count $working-tests)}' tests passed out of '{(count $tests)}
+    echo
+    echo {(* 100 (/ (count $working-tests) (count $tests)))}'% of tests are passing'
+    echo
+
+  }
+#+end_src
+
+
 * plain reporter
 
 Basic reporter similar to what you get with other test runners.  Colored output.
@@ -394,6 +424,8 @@ I will accept a 3rd party dependency for this.
         }
       }
     }
+
+    stats $@xs
   }
 #+end_src
 
@@ -461,11 +493,17 @@ Presents text suitable for documentation.
 
     echo '# '{$header}
 
-    var i = 1
+    echo '1. [testing-status](#testing-status})'
+
+    var i = 2
     for subheader $subheaders {
       echo {$i}'. ['{$subheader}'](#'{$subheader}')'
       set i = (+ $i 1)
     }
+
+    echo '***'
+    echo '## testing-status'
+    stats $@xs
 
     var last-reality last-bool
     var num-tests = 0
