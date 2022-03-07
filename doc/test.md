@@ -16,22 +16,22 @@
 ***
 ## make-assertion
  
-lowest-level building-block for constructing assertions.  The makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
+lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { }
-▶ [&name=foo &f=<closure 0xc0002f9980> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000720540> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc00035b800> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000720780> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc00035bc80> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0008ba540> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000366600> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000817d40> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
@@ -182,7 +182,7 @@ general use-cases for each assertion
 ▶ $true
 ```
  
-`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We don not care about the return value - only that the function works without error
+`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error
 ```elvish
 (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool]
 ▶ $true

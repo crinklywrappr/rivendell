@@ -506,7 +506,7 @@ fn md-show {
 
 var tests = [Tests
              [make-assertion
-              'lowest-level building-block for constructing assertions.  The makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
+              'lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
               (is-map)
               { make-assertion foo { } }
               { make-assertion foo { } &fixtures=[&foo=bar]}
@@ -604,7 +604,7 @@ var tests = [Tests
               { (is-num)[f] { num 1 } | put (one)[bool] }
               { (is-num)[f] { float64 1 } | put (one)[bool] }
 
-              '`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We don not care about the return value - only that the function works without error'
+              '`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error'
               { (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
 
               (is-one $false)
