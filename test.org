@@ -602,7 +602,7 @@ Tests for this module
 #+TODO: show how to use destructuring to achieve the same effect as pattern matching
 
 #+begin_src text :tangle ./test.elv
-  var tests = [Tests
+  var tests = [Test.elv
                [make-assertion
                 'lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
                 (is-map)

@@ -3,6 +3,7 @@
 ## Documentation
 
 - [test.elv](doc/test.md)
+- [base.elv](doc/base.md)
 
 Command-line users are recommended to use `glow`.
 

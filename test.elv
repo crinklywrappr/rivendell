@@ -504,7 +504,7 @@ fn md-show {
 
 }
 
-var tests = [Tests
+var tests = [Test.elv
              [make-assertion
               'lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
               (is-map)

@@ -1,4 +1,4 @@
-# Tests
+# Test.elv
 1. [testing-status](#testing-status)
 2. [make-assertion](#make-assertion)
 3. [is-assertion](#is-assertion)
@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { }
-▶ [&name=foo &f=<closure 0xc000720540> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0005dd380> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc000720780> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc00072e300> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0008ba540> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0004cf2c0> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000817d40> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc0006b2000> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
