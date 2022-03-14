@@ -1,3 +1,4 @@
+use math
 use str
 use re
 
@@ -272,7 +273,7 @@ fn stats {
 
   echo {(count $working-tests)}' tests passed out of '{(count $tests)}
   echo
-  echo {(* 100 (/ (count $working-tests) (count $tests)))}'% of tests are passing'
+  echo {(math:floor (* 100 (/ (count $working-tests) (count $tests))))}'% of tests are passing'
   echo
 
 }

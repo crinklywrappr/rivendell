@@ -23,6 +23,7 @@ Reporters emit text.  The test module provides the following reporters.
 The test module should only depend on modules available in elvish core.
 
 #+begin_src elvish :tangle ./test.elv
+  use math
   use str
   use re
 #+end_src
@@ -338,7 +339,7 @@ Currently this only reports success/total.  Much more could be added in the futu
 
     echo {(count $working-tests)}' tests passed out of '{(count $tests)}
     echo
-    echo {(* 100 (/ (count $working-tests) (count $tests)))}'% of tests are passing'
+    echo {(math:floor (* 100 (/ (count $working-tests) (count $tests))))}'% of tests are passing'
     echo
 
   }
