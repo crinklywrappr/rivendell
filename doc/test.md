@@ -9,7 +9,7 @@
 8. [working-test-runner](#working-test-runner)
 ***
 ## testing-status
-60 tests passed out of 60
+62 tests passed out of 62
 
 100% of tests are passing
 
@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { }
-▶ [&name=foo &f=<closure 0xc0005dd380> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000346d80> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc00072e300> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000826300> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0004cf2c0> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000826a80> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0006b2000> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000246cc0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
@@ -53,6 +53,7 @@ All other assertions satisfy the predicate
 assert foo { put $true } | is-assertion (one)
 is-one foo | is-assertion (one)
 is-each foo bar | is-assertion (one)
+is-differences-empty foo bar | is-assertion (one)
 is-error | is-assertion (one)
 is-something | is-assertion (one)
 is-nothing | is-assertion (one)
@@ -151,6 +152,7 @@ general use-cases for each assertion
 ```elvish
 (is-one foo)[f] { put foo } | put (one)[bool]
 (is-each foo bar)[f] { put foo; put bar } | put (one)[bool]
+(is-differences-empty foo bar)[f] { put bar; put foo } | put (one)[bool]
 (is-error)[f] { fail foobar } | put (one)[bool]
 (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool]
 (is-nothing)[f] { } | put (one)[bool]
@@ -304,7 +306,7 @@ Stores can be supplied to tests, too.  These must be maps, too.  Stores persist 
 ▶ break
 ▶ store-test
 ▶ [&test='assoc $store x foo | assoc (one) y bar' &expect=whaky-test &bool=$true &store=[&x=foo &y=bar] &subheader=store-test &messages=[] &reality=[[&x=foo &y=bar]]]
-▶ [&test="\n                         if (eq $store[x] foo) {\n                           assoc $store x bar | assoc (one) y foo\n                         } else {\n                           put [&]\n                         }\n" &expect=whaky-test &bool=$true &store=[&x=bar &y=foo] &subheader=store-test &messages=[] &reality=[[&x=bar &y=foo]]]
+▶ [&test="\n              if (eq $store[x] foo) {\n                assoc $store x bar | assoc (one) y foo\n              } else {\n                put [&]\n              }\n" &expect=whaky-test &bool=$true &store=[&x=bar &y=foo] &subheader=store-test &messages=[] &reality=[[&x=bar &y=foo]]]
 ▶ [store-test]
 ```
  
