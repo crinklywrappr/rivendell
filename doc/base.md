@@ -19,14 +19,15 @@
 18. [rest](#rest)
 19. [end](#end)
 20. [butlast](#butlast)
-21. [nth](#nth)
-22. [is-empty](#is-empty)
-23. [check-pipe](#check-pipe)
-24. [flatten](#flatten)
-25. [min/max](#min/max)
+21. [is-empty](#is-empty)
+22. [swap](#swap)
+23. [nth](#nth)
+24. [check-pipe](#check-pipe)
+25. [flatten](#flatten)
+26. [min/max](#min/max)
 ***
 ## testing-status
-98 tests passed out of 98
+100 tests passed out of 100
 
 100% of tests are passing
 
@@ -457,6 +458,40 @@ butlast hello
 ```elvish
 ▶ hell
 ```
+***
+## is-empty
+ 
+does whats on the tin
+```elvish
+is-empty []
+is-empty ''
+```
+```elvish
+▶ $true
+```
+***
+## swap
+ 
+Works on maps
+```elvish
+swap [&a=2 &b=1] a b
+▶ [&a=1 &b=2]
+```
+ 
+Works on lists
+```elvish
+swap [b a c] 0 1
+▶ [a b c]
+```
+ 
+Works on strings
+## swap
+ 
+tsuff
+ 
+0
+ 
+1
  
 # More complicated list operations
 ***
@@ -493,17 +528,6 @@ It uses `drop` under the hood, so negative indices just return the 0-index
 ```elvish
 nth [f o o b a r] -10
 ▶ f
-```
-***
-## is-empty
- 
-does whats on the tin
-```elvish
-is-empty []
-is-empty ''
-```
-```elvish
-▶ $true
 ```
 ***
 ## check-pipe

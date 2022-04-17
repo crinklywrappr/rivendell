@@ -29,7 +29,9 @@ fn ffirst {|li| first (first $li) }
 fn second {|li| put $li[1] }
 fn rest {|li| put $li[1..] }
 fn end {|li| put $li[-1] }
+fn is-empty {|li| is-zero (count $li) }
 fn butlast {|li| put $li[..(dec (count $li))] }
+fn swap {|coll x y| assoc (assoc $coll $x $coll[$y]) $y $coll[$x] }
 
 fn nth {
   |li n &not-found=$false|
@@ -39,8 +41,6 @@ fn nth {
     drop $n $li | take 1
   }
 }
-
-fn is-empty {|li| is-zero (count $li) }
 
 fn check-pipe {
   |li|
@@ -295,6 +295,25 @@ var tests = [base.elv
    { butlast "hello" }
    { butlast hello }]
 
+  [is-empty
+   'does whats on the tin'
+   (test:is-one $true)
+   { is-empty [] }
+   { is-empty '' }]
+
+  [swap
+   'Works on maps'
+   (test:is-one [&a=1 &b=2])
+   { swap [&a=2 &b=1] a b }
+
+   'Works on lists'
+   (test:is-one [a b c])
+   { swap [b a c] 0 1 }
+
+   'Works on strings'
+   (test:is-one stuff)
+   {swap tsuff 0 1}]
+
   '# More complicated list operations'
 
   [nth
@@ -316,14 +335,9 @@ var tests = [base.elv
 
    'It uses `drop` under the hood, so negative indices just return the 0-index'
    (test:is-one f)
-   { nth [f o o b a r] -10}
-   ]
+   { nth [f o o b a r] -10}]
 
-  [is-empty
-   'does whats on the tin'
-   (test:is-one $true)
-   { is-empty [] }
-   { is-empty '' }]
+
 
   [check-pipe
    'this is probably the most interesting function here.  it takes input, and if the input is empty, returns whats in the pipe.  Otherwise it returns the input, exploded.'
