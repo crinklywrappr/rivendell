@@ -24,10 +24,10 @@
 23. [nth](#nth)
 24. [check-pipe](#check-pipe)
 25. [flatten](#flatten)
-26. [min/max](#min/max)
+26. [identity](#identity)
 ***
 ## testing-status
-100 tests passed out of 100
+97 tests passed out of 97
 
 100% of tests are passing
 
@@ -565,22 +565,12 @@ flatten foobar
 ▶ foobar
 ```
  
-# Min/max functions
+# Misc. functions
 ***
-## min/max
+## identity
  
-they do whats on the tin, but only compare two numbers, hence the signature
+Returns the input
 ```elvish
-min2 1 2
-max2 0 1
-```
-```elvish
-▶ 1
-```
-```elvish
-min2 (range 1 3)
-max2 (range 0 2)
-```
-```elvish
-▶ 1
+identity a
+▶ a
 ```

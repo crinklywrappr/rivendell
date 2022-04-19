@@ -63,21 +63,7 @@ fn flatten {
   }
 }
 
-fn min2 {|a b|
-  if (< $a $b) {
-    put $a
-  } else {
-    put $b
-  }
-}
-
-fn max2 {|a b|
-  if (> $a $b) {
-    put $a
-  } else {
-    put $b
-  }
-}
+fn identity {|x| put $x}
 
 var tests = [base.elv
   'These functions largely assume numbers, lists, and strings.  The list operations are of dubious usefulness for users, however.'
@@ -354,14 +340,9 @@ var tests = [base.elv
    (test:is-one foobar)
    { flatten foobar }]
 
-  '# Min/max functions'
-  [min/max
-   'they do whats on the tin, but only compare two numbers, hence the signature'
-   (test:is-one 1)
-   { min2 1 2 }
-   { max2 0 1 }
-
-   (test:is-one (num 1))
-   { min2 (range 1 3) }
-   { max2 (range 0 2) }]
+  '# Misc. functions'
+  [identity
+   'Returns the input'
+   (test:is-one a)
+   { identity a }]
 ]
