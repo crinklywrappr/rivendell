@@ -603,7 +603,7 @@ Presents text suitable for documentation.
   }
 
   fn md-show {
-    |@markdown|
+    |@markdown &pager=$false|
 
     if (not-eq $ok ?(which glow)) {
       echo 'Glow required: https://github.com/charmbracelet/glow'
@@ -616,7 +616,11 @@ Presents text suitable for documentation.
       echo $line >> $tmp
     }
 
-    glow $tmp
+    if $pager {
+      glow $tmp --pager
+    } else {
+      glow $tmp
+    }
 
   }
 #+end_src

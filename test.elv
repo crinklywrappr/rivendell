@@ -513,7 +513,7 @@ fn md {
 }
 
 fn md-show {
-  |@markdown|
+  |@markdown &pager=$false|
 
   if (not-eq $ok ?(which glow)) {
     echo 'Glow required: https://github.com/charmbracelet/glow'
@@ -526,7 +526,11 @@ fn md-show {
     echo $line >> $tmp
   }
 
-  glow $tmp
+  if $pager {
+    glow $tmp --pager
+  } else {
+    glow $tmp
+  }
 
 }
 

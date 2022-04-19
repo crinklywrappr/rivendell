@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { }
-▶ [&name=foo &f=<closure 0xc000346d80> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0009655c0> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc000826300> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000754480> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000826a80> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000387200> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000246cc0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc00076c3c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
