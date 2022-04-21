@@ -25,6 +25,18 @@ Functions which don't rely on other functions in the fun module.
     set @els = (base:check-pipe $els)
     put $els
   }
+
+  fn first {|@els|
+    put $els[0]
+  }
+
+  fn second {|@els|
+    put $els[1]
+  }
+
+  fn end {|@els|
+    put $els[-1]
+  }
 #+end_src
 
 * low-level map functions
@@ -202,15 +214,29 @@ Functions which filter.
 This is an important function for consuming "array" values.
 
 #+begin_src elvish :tangle ./fun.elv
-  fn into {|container @arr &keyfn=$base:first~ &valfn=$base:second~|
+  fn into {|container @arr ^
+    &keyfn=$base:first~ ^
+    &valfn=$base:second~ ^
+    &collision=$nil|
+
     set @arr = (base:check-pipe $arr)
-    if (eq (kind-of $container) map) {
+    if (and (eq (kind-of $container) map) (eq $collision $nil)) {
       reduce {|a b|
         assoc $a ($keyfn $b) ($valfn $b)
+      } $container $@arr
+    } elif (eq (kind-of $container) map) {
+      reduce {|a b|
+        var k = ($keyfn $b)
+        var v = ($valfn $b)
+        if (has-key $a $k) {
+          set v = ($collision $a[$k] $v)
+        }
+        assoc $a $k $v
       } $container $@arr
     } elif (eq (kind-of $container) list) {
       base:concat2 $container $arr
     }
+
   }
 #+end_src
 
@@ -258,7 +284,7 @@ Functions which take an "array" and return a modified result
 
   fn distinct {|@args|
     set @args = (base:check-pipe $args)
-    into [&] &keyfn=$base:identity~ &valfn=(constantly $nil) $@args | keys (one)
+    into [&] &keyfn=$put~ &valfn=(constantly $nil) $@args | keys (one)
   }
 
   fn unique {|@args &count=$false|
@@ -299,13 +325,13 @@ Functions which take an "array" and return a "scalar".
 
   fn min-key {|f @arr|
     set @arr = (base:check-pipe $arr)
-    var m = (into [&] $@arr &keyfn=$f &valfn=$base:identity~)
+    var m = (into [&] $@arr &keyfn=$f &valfn=$put~)
     keys $m | math:min (all) | put $m[(one)]
   }
 
   fn max-key {|f @arr|
     set @arr = (base:check-pipe $arr)
-    var m = (into [&] $@arr &keyfn=$f &valfn=$base:identity~)
+    var m = (into [&] $@arr &keyfn=$f &valfn=$put~)
     keys $m | math:max (all) | put $m[(one)]
   }
 #+end_src
@@ -389,44 +415,52 @@ Map functions
     } $arr
   }
 
-  fn map {|f @arr &els=(num 1)|
+  fn map {|f @arr &lists=$nil &els=$nil|
     set @arr = (base:check-pipe $arr)
-    if (and (base:is-number $els) (== $els 1)) {
+    if (eq $lists $false) {
       each $f $arr
-    } elif (base:is-number $els) {
-      each {|i|
-        each {|l|
-          put $l[$i]
-        } $arr | $f (all)
-      } [(range $els)]
+    } elif (eq $lists $true) {
+      if $els {
+        each {|i|
+          each {|l|
+            put $l[$i]
+          } $arr | $f (all)
+        } [(range $els)]
+      } else {
+        map $f $@arr &els=(each $count~ $arr | math:min (all)) &lists=$lists
+      }
     } else {
-      map $f $@arr &els=(each $count~ $arr | math:min (all))
+      map $f $@arr &els=$els &lists=(every $base:is-list~ $@arr)
     }
   }
 
-  fn pmap {|f @arr &els=(num 1)|
+  fn pmap {|f @arr &lists=$nil &els=$nil|
     set @arr = (base:check-pipe $arr)
-    if (and (base:is-number $els) (== $els 1)) {
+    if (eq $lists $false) {
       peach $f $arr
-    } elif (base:is-number $els) {
-      peach {|i|
-        each {|l|
-          put $l[$i]
-        } $arr | $f (all)
-      } [(range $els)]
+    } elif (eq $lists $true) {
+      if $els {
+        peach {|i|
+          each {|l|
+            put $l[$i]
+          } $arr | $f (all)
+        } [(range $els)]
+      } else {
+        pmap $f $@arr &els=(each $count~ $arr | math:min (all)) &lists=$lists
+      }
     } else {
-      pmap $f $@arr &els=(each $count~ $arr | math:min (all))
+      pmap $f $@arr &els=$els &lists=(every $base:is-list~ $@arr)
     }
   }
 
-  fn mapcat {|f @arr &els=(num 1)|
-    map $f $@arr &els=$els | concat
+  fn mapcat {|f @arr &lists=$nil &els=$nil|
+    map $f $@arr &lists=$lists &els=$els | concat
   }
 
   fn map-indexed {|f @arr|
     set @arr = (base:check-pipe $arr)
     var els = (count $arr)
-    put [(range $els)] $arr | map $f &els=$els
+    map $f [(range $els)] $arr &lists=$true &els=$els
   }
 
   fn keep-indexed {|f @arr &pred=(complement $base:is-nil~)|
@@ -441,49 +475,107 @@ Map functions
   }
 #+end_src
 
-* backup
 
-#+begin_src elvish :tangle ./fun.elv.bkp
+* More array producing functions
 
+Like the others, but higher level.
 
-  fn interleave [@lists]{
-    @lists = (base:check-pipe $lists)
-    map $put~ $@lists
+#+begin_src elvish :tangle ./fun.elv
+  fn interleave {|@lists|
+    set @lists = (base:check-pipe $lists)
+    map $put~ $@lists &lists=$true &els=(each $count~ $lists | math:min (all))
   }
 
-  fn interpose [sep @args]{
-    interleave $args [(repeat (count $args) $sep)]
+  fn interpose {|sep @arr|
+    set @arr = (base:check-pipe $arr)
+    var c = (base:dec (count $arr))
+    map $put~ $arr [(repeat $c $sep)] &lists=$true &els=$c
+    put $arr[$c]
   }
 
-  fn partition [n @args &step=$false &pad=$false]{
+  fn partition {|n @args &step=$nil &pad=$nil|
+    set @args = (base:check-pipe $args)
     if (and (> $n 0) (or (not $step) (> $step 0))) {
-      each [i]{
-        li = [(drop $i $args | take $n)]
+      each {|i|
+        var li = [(drop $i $args | take $n)]
         if (== $n (count $li)) {
           put $li
-        } elif $pad {
+        } elif (not-eq $pad $nil) {
           base:append $li (take (- $n (count $li)) $pad)
         }
       } [(range (count $args) &step=(or $step $n))]
     }
   }
 
-  fn partition-all [n @args]{
+  fn partition-all {|n @args|
     partition $n $@args &pad=[]
   }
 
-  fn difference [l1 l2]{
-    into [&] (explode $l1) |
-      reduce [a b]{
-        dissoc $a $b
-      } (all) (explode $l2) |
-      keys (all)
+  fn zipmap {|ks vs|
+    interleave $ks $vs | partition 2 | into [&]
+  }
+#+end_src
+
+
+* statistics
+
+#+begin_src elvish :tangle ./fun.elv
+  fn group-by {|f @arr|
+    set @arr = (base:check-pipe $arr)
+    into [&] $@arr &keyfn=$f &valfn=(box $put~) &collision=$base:concat2~
   }
 
-  fn union [@lists]{
-    @lists = (base:check-pipe $lists)
-    concat $@lists | explode (all) | distinct
+  fn frequencies {|@arr|
+    set @arr = (base:check-pipe $arr)
+    into [&] $@arr &keyfn=$put~ &valfn=(constantly (num 1)) &collision=$'+~'
   }
+
+  fn map-invert {|m &lossy=$true|
+    if $lossy {
+      kvs $m | into [&] &keyfn=$base:second~ &valfn=$base:first~
+    } else {
+      kvs $m | into [&] &keyfn=$base:second~ &valfn=(box $base:first~) &collision=$base:concat2~
+    }
+  }
+#+end_src
+
+
+* set operations
+
+#+begin_src elvish :tangle ./fun.elv
+  fn union {|@lists|
+    set @lists = (base:check-pipe $lists)
+    concat $@lists | all (one) | distinct
+  }
+
+  fn difference {|l1 @lists|
+    set @lists = (base:check-pipe $lists)
+    union $@lists ^
+    | reduce {|a b|
+        dissoc $a $b
+      } (all $l1 | into [&] &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
+    | keys (one)
+  }
+
+  fn intersection {|@lists|
+    set @lists = (base:check-pipe $lists)
+    var m = (each (destruct $distinct~) $lists ^
+      | frequencies ^
+      | map-invert (one) &lossy=$false)
+
+    var c = (count $lists)
+    if (has-key $m $c) {
+      all $m[$c]
+    }
+  }
+#+end_src
+
+
+* backup
+
+#+begin_src elvish :tangle ./fun.elv.bkp
+
+
 
   fn iterate [f n seed]{
     i = 1
@@ -512,34 +604,6 @@ Map functions
   fn shuffle [@args]{
     @args = (base:check-pipe $args)
     sample (count $args) $@args
-  }
-
-  fn frequencies [@args]{
-    unique &count=$true $@args |
-      each (destruct [v k]{ put [&$k=$v] }) |
-      merge-with $+~ (all)
-  }
-
-  fn group-by [f @args]{
-    mapfn = (comp (partial $into~ [&]) $listify~ (juxt $f (box $put~)))
-    each $mapfn $args | merge-with $concat~ (all)
-  }
-
-  fn intersection [@lists]{
-    @lists = (base:check-pipe $lists)
-
-    c = (count $lists)
-    f = (destruct [k v]{ == (count $v) $c })
-
-    each (destruct $distinct~) $lists |
-      group-by $put~ (all) |
-      kvs (all) | 
-      filter $f (all) | 
-      each $base:first~
-  }
-
-  fn zipmap [ks vs]{
-    interleave $ks $vs | partition 2 (all) | into [&] (all)
   }
 
   fn in [val possibilities]{
@@ -591,13 +655,6 @@ Map functions
 
   fn index [maps @ks]{
     group-by [m]{ select-keys $m $@ks } (explode $maps)
-  }
-
-  fn reduce-kv [f acc m]{
-    for kv [(kvs $m)] {
-      acc = ($f $acc $kv[0] $kv[1])
-    }
-    put $acc
   }
 
   fn take-nth [n @args]{
@@ -720,6 +777,21 @@ Tests for this module.
      { concat [1 2 3] [4 5 6] [7 8 9] }
      { put [1 2 3] [4 5 6] [7 8 9] | concat }]
 
+    [first
+     "Returns the first element"
+     (test:is-one a)
+     { first a b c }]
+
+    [second
+     "Returns the second element"
+     (test:is-one b)
+     { second a b c }]
+
+    [end
+     "Returns the last element"
+     (test:is-one c)
+     { end a b c }]
+
     [min-key/max-key
      "Returns the x for which `(f x)`, a number, is least, or most."
      "If there are multiple such xs, the last one is returned."
@@ -728,6 +800,62 @@ Tests for this module.
 
      (test:is-one (num 14))
      { max-key $math:sin~ (range 20) }]
+
+    '# Statistics'
+    [group-by
+     'Returns a map of elements keyed by `(f x)`'
+     (test:is-one [&(num 1)=[a] &(num 2)=[as aa] &(num 3)=[asd] &(num 4)=[asdf qwer]])
+     { group-by $count~ a as asd aa asdf qwer }
+     { put a as asd aa asdf qwer | group-by $count~ }
+
+     (test:is-one [&a=[[&key=a &val=1] [&key=a &val=3]] &b=[[&key=b &val=1]]])
+     { group-by {|m| put $m[key]} [&key=a &val=1] [&key=b &val=1] [&key=a &val=3]}]
+
+    [frequencies
+     'Returns a map of the number of times a thing appears'
+     (test:is-one [&a=(num 3) &b=(num 3) &c=(num 2) &d=(num 1) ^
+                   &h=(num 2) &r=(num 1) &s=(num 2) &u=(num 2)])
+     { frequencies (each $all~ [abba acdc rush bush]) }
+     { each $all~ [abba acdc rush bush] | frequencies }]
+
+    [map-invert
+     "Does what's on the tin"
+     (test:is-one [&1=a &2=b &3=c])
+     { map-invert [&a=1 &b=2 &c=3] }
+     'Normally lossy.'
+     (test:is-one [&1=c &2=b])
+     { map-invert [&a=1 &b=2 &c=1] }
+     'You can tell it not to be lossy, though.'
+     (test:is-one [&1=[a c] &2=[b]])
+     { map-invert [&a=1 &b=2 &c=1] &lossy=$false }]
+
+    '# Set functions'
+    [union
+     'Set theory union'
+     (test:is-differences-empty a b c d e f g h i)
+     { union [a b c] [d b e f] [g e h i] }
+     { put [a b c] [d b e f] [g e h i] | union }]
+
+    [difference
+     'Subtracts a bunch of sets from another'
+     (test:is-differences-empty b c)
+     { difference [a b c] [a d e] }
+
+     (test:is-differences-empty c)
+     { difference [a b c] [a d e] [b f g] }
+     { put [a d e] [b f g] | difference [a b c] }]
+
+    [intersection
+     'Set theory intersection - returns only the items in all sets.'
+     (test:is-differences-empty a b c)
+     { intersection [a b c] }
+
+     (test:is-differences-empty b c)
+     { intersection [a b c] [b c d] }
+     { put [a b c] [b c d] | intersection }
+
+     (test:is-differences-empty c)
+     { intersection [a b c] [b c d] [c d e] }]
 
     '# Map functions'
     [update
@@ -910,7 +1038,11 @@ Tests for this module.
 
      'Into takes optional arguments for getting keys/vals from the input.'
      (test:is-one [&s=0x73 &t=0x74 &u=0x75 &f=0x66])
-     { use str; into [&] &keyfn=$base:identity~ &valfn=$str:to-utf8-bytes~ (all stuff) }]
+     { use str; into [&] &keyfn=$put~ &valfn=$str:to-utf8-bytes~ (all stuff) }
+
+     'Into also takes an optional argument for handling collisions.'
+     (test:is-one [&s=[0x73] &t=[0x74] &u=[0x75] &f=[0x66 0x66]])
+     { use str; into [&] &keyfn=$put~ &valfn=(box $str:to-utf8-bytes~) &collision=$base:concat2~ (all stuff) }]
 
     [reverse
      "Does what's on the tin."
@@ -944,6 +1076,79 @@ Tests for this module.
      "It doesn't care about mathematical equality"
      (test:is-each 1 1.0 (num 1) (num 1.0))
      { unique 1 1.0 (num 1) (num 1.0) }]
+
+    [interleave
+     'Returns an "array" of the first item in each list, then the second, etc.'
+     (test:is-each a 1 b 2 c 3)
+     { interleave [a b c] [1 2 3] }
+
+     'Understands mismatched lengths'
+     { interleave [a b c d] [1 2 3] }
+     { interleave [a b c] [1 2 3 4] }]
+
+    [interpose
+     'Returns an "array" of the elements seperated by `sep`.'
+     (test:is-one one)
+     { interpose , one }
+     (test:is-each one , two)
+     { interpose , one two }
+     (test:is-each one , two , three)
+     { interpose , one two three }]
+
+    [partition
+     "partitions an "array" into lists of size n."
+     (test:is-each [(num 0) (num 1) (num 2)] ^
+                   [(num 3) (num 4) (num 5)] ^
+                   [(num 6) (num 7) (num 8)] ^
+                   [(num 9) (num 10) (num 11)])
+     { partition 3 (range 12) }
+     { range 12 | partition 3 }
+
+     "Drops items which don't complete the specified list size."
+     { range 14 | partition 3 }
+
+     'Specify `&step=n` to specify a "starting point" for each partition.'
+     (test:is-each [(num 0) (num 1) (num 2)] [(num 5) (num 6) (num 7)])
+     { range 12 | partition 3 &step=5 }
+
+     "`&step` can be < than the partition size."
+     (test:is-each [(num 0) (num 1)] [(num 1) (num 2)] [(num 2) (num 3)])
+     { range 4 | partition 2 &step=1}
+
+     "When there are not enough items to fill the last partition, a pad can be supplied."
+     (test:is-each [(num 0) (num 1) (num 2)] ^
+                   [(num 3) (num 4) (num 5)] ^
+                   [(num 6) (num 7) (num 8)] ^
+                   [(num 9) (num 10) (num 11)] ^
+                   [(num 12) (num 13) a])
+     { range 14 | partition 3 &pad=[a] }
+
+     "The size of the pad may exceed what is used."
+     (test:is-each [(num 0) (num 1) (num 2)] ^
+                   [(num 3) (num 4) (num 5)] ^
+                   [(num 6) (num 7) (num 8)] ^
+                   [(num 9) (num 10) (num 11)] ^
+                   [(num 12) a b])
+     { range 13 | partition 3 &pad=[a b] }
+
+     "...or not."
+     (test:is-each [(num 0) (num 1) (num 2)] ^
+                   [(num 3) (num 4) (num 5)] ^
+                   [(num 6) (num 7) (num 8)] ^
+                   [(num 9) (num 10) (num 11)] ^
+                   [(num 12)])
+     { range 13 | partition 3 &pad=[] }]
+
+    [partition-all
+     'Convenience function for `partition` which supplies `&pad=[]`.'
+     "Use when you don't want everything in the resultset."
+     (test:is-each [(num 0) (num 1) (num 2)] ^
+                   [(num 3) (num 4) (num 5)] ^
+                   [(num 6) (num 7) (num 8)] ^
+                   [(num 9) (num 10) (num 11)] ^
+                   [(num 12)])
+     { partition-all 3 (range 13) }
+     { range 13 | partition-all 3 }]
 
     '# Predicate runners'
     [some
@@ -990,30 +1195,37 @@ Tests for this module.
      { keep (partial $'*~' 3) (range 1 10) &pred=$base:is-even~ }]
 
     [map
-     '`map` is a more powerful `each`.  It works with "array" values and reads from the pipe.  `pmap` works in parallel.'
+     '`map` is a more powerful than `each`.  It works with "array" values and reads from the pipe.  `pmap` works in parallel.'
      (test:is-each (num 1) (num 2) (num 3) (num 4) (num 5))
      { map $base:inc~ (range 5) }
      { range 5 | map $base:inc~ }
      { each $base:inc~ [(range 5)] }
 
      "Unlike `each`, `map` understands what to do with multiple lists."
-     "For performance reasons, set the optional `els` var when doing this."
      (test:is-each (num 22) (num 26) (num 30))
-     { map $'+~' [1 2 3] [4 5 6] [7 8 9] [10 11 12] &els=(num 3) }
+     { map $'+~' [1 2 3] [4 5 6] [7 8 9] [10 11 12] }
 
-     "Set the els to $nil to tell `map` to figure it out."
-     (test:is-each (num 12) (num 15) (num 18))
-     { map $'+~' [1 2 3] [4 5 6] [7 8 9 10] &els=$nil }
+     "It also understands mismatches"
+     { map $'+~' [1 2 3] [4 5 6] [7 8 9] [10 11 12 13 14 15] }
 
-     "`map` can still process multiple lists the way that `each` does.  Just omit the arity."
+     "If you can, supply the optional parameters for faster performance."
+     "For most operations, `&lists=$false` is enough."
+     (test:is-each (num 1) (num 2) (num 3) (num 4) (num 5))
+     { map $base:inc~ (range 5) &lists=$false }
+
+     "When working with lists, supply `&els` for faster performance."
+     (test:is-each (num 22) (num 26) (num 30))
+     { map $'+~' [1 2 3] [4 5 6] [7 8 9] [10 11 12] &lists=$true &els=3 }
+
+     "`map` can still process multiple lists the way that `each` does.  Just set `&lists=$false`."
      (test:is-each 1 4 7)
      { each $base:first~ [[1 2 3] [4 5 6] [7 8 9]] }
-     { map $base:first~ [1 2 3] [4 5 6] [7 8 9] }]
+     { map $base:first~ [1 2 3] [4 5 6] [7 8 9] &lists=$false }]
 
     [mapcat
      "Applies concat to the result of `(map f xs)`.  Here for convenience."
      (test:is-one [1 2 3 4 5 6 7 8 9])
-     { mapcat (box (destruct $reverse~)) [3 2 1] [6 5 4] [9 8 7] }
+     { mapcat (box (destruct $reverse~)) [3 2 1] [6 5 4] [9 8 7] &lists=$false }
 
      "Here's some shenanigans.  What does it mean?  You decide."
      (test:is-each [9 6 3 8 5 2 7 4 1])
@@ -1024,6 +1236,15 @@ Tests for this module.
      (test:is-each [(num 0) s] [(num 1) t] [(num 2) u] [(num 3) f] [(num 4) f])
      { map-indexed {|i x| put [$i $x]} (all stuff) }
      { all stuff | map-indexed {|i x| put [$i $x]} }]
+
+    [zipmap
+     'Returns a map with the keys mapped to the corresponding vals'
+     (test:is-one [&a=1 &b=2 &c=3])
+     { zipmap [a b c] [1 2 3] }
+
+     'Understands mismatches'
+     { zipmap [a b c d] [1 2 3] }
+     { zipmap [a b c] [1 2 3 4] }]
 
     [keep-indexed
      'Returns all non-empty & non-nil results of `(f index item)`.'
