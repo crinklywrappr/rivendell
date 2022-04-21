@@ -24,10 +24,9 @@
 23. [nth](#nth)
 24. [check-pipe](#check-pipe)
 25. [flatten](#flatten)
-26. [identity](#identity)
 ***
 ## testing-status
-97 tests passed out of 97
+96 tests passed out of 96
 
 100% of tests are passing
 
@@ -563,14 +562,4 @@ anything else is just returned
 ```elvish
 flatten foobar
 ▶ foobar
-```
- 
-# Misc. functions
-***
-## identity
- 
-Returns the input
-```elvish
-identity a
-▶ a
 ```

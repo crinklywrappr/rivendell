@@ -63,8 +63,6 @@ fn flatten {
   }
 }
 
-fn identity {|x| put $x}
-
 var tests = [base.elv
   'These functions largely assume numbers, lists, and strings.  The list operations are of dubious usefulness for users, however.'
   '# Math functions'
@@ -338,11 +336,4 @@ var tests = [base.elv
 
    'anything else is just returned'
    (test:is-one foobar)
-   { flatten foobar }]
-
-  '# Misc. functions'
-  [identity
-   'Returns the input'
-   (test:is-one a)
-   { identity a }]
-]
+   { flatten foobar }]]

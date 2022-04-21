@@ -100,13 +100,6 @@ More complicated list operations.
 #+end_src
 
 
-* misc. operations
-
-#+begin_src elvish :tangle ./base.elv
-  fn identity {|x| put $x}
-#+end_src
-
-
 * tests
 
 #+begin_src text :tangle ./base.elv
@@ -383,12 +376,5 @@ More complicated list operations.
 
      'anything else is just returned'
      (test:is-one foobar)
-     { flatten foobar }]
-
-    '# Misc. functions'
-    [identity
-     'Returns the input'
-     (test:is-one a)
-     { identity a }]
-  ]
+     { flatten foobar }]]
 #+end_src
