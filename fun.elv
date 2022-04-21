@@ -414,6 +414,63 @@ fn zipmap {|ks vs|
   interleave $ks $vs | partition 2 | into [&]
 }
 
+fn rest {|@xs|
+  drop 1 $xs
+}
+
+fn iterate {|f n seed|
+  var i = 1
+  put $seed
+  while (< $i $n) {
+    set seed = ($f $seed)
+    set i = (base:inc $i)
+    put $seed
+  }
+}
+
+fn take-nth {|n @arr|
+  set @arr = (base:check-pipe $arr)
+  partition 1 &step=$n $@arr | each $all~
+}
+
+fn take-while {|f @arr|
+  set @arr = (base:check-pipe $arr)
+  var res
+  for x $arr {
+    set @res = ($f $x)
+    if (and (> (count $res) 0) $@res) {
+      put $x
+    } else {
+      break
+    }
+  }
+}
+
+fn drop-while {|f @arr|
+  set @arr = (base:check-pipe $arr)
+  var res
+  var i = 0
+  for x $arr {
+    set @res = ($f $x)
+    if (and (> (count $res) 0) $@res) {
+      set i = (base:inc $i)
+    } else {
+      break
+    }
+  }
+  all $arr[$i..]
+}
+
+fn drop-last {|n @arr|
+  set @arr = (base:check-pipe $arr)
+  take (- (count $arr) $n) $arr
+}
+
+fn butlast {|@arr|
+  set @arr = (base:check-pipe $arr)
+  drop-last 1 $@arr
+}
+
 fn group-by {|f @arr|
   set @arr = (base:check-pipe $arr)
   into [&] $@arr &keyfn=$f &valfn=(box $put~) &collision=$base:concat2~
@@ -432,6 +489,25 @@ fn map-invert {|m &lossy=$true|
   }
 }
 
+fn rand-sample {|n @arr|
+  for x $arr {
+    if (<= (rand) $n) {
+      put $x
+    }
+  }
+}
+
+fn sample {|n @arr|
+  var rand-idx = (comp $base:second~ $count~ (partial $randint~ 0))
+  var f = (comp (juxt $base:second~ $rand-idx) (juxt $base:get~ $base:pluck~))
+  iterate (box $f) (base:inc $n) ['' $arr] | drop 1 | each $base:first~
+}
+
+fn shuffle {|@arr|
+  set @arr = (base:check-pipe $arr)
+  sample (count $arr) $@arr
+}
+
 fn union {|@lists|
   set @lists = (base:check-pipe $lists)
   concat $@lists | all (one) | distinct
@@ -442,7 +518,7 @@ fn difference {|l1 @lists|
   union $@lists ^
   | reduce {|a b|
       dissoc $a $b
-    } (all $l1 | into [&] &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
+    } ( into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
   | keys (one)
 }
 
@@ -456,6 +532,24 @@ fn intersection {|@lists|
   if (has-key $m $c) {
     all $m[$c]
   }
+}
+
+fn subset {|l1 l2|
+  every (partial $has-key~ (into [&] $@l2 &keyfn=$put~ &valfn=(constantly $nil))) $@l1
+}
+
+fn superset {|l1 l2|
+  every (partial $has-key~ (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil))) $@l2
+}
+
+fn overlaps {|l1 l2|
+  some (partial $has-key~ (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil))) $@l2
+}
+
+fn assert-differences-empty {|@expectation &fixtures=[&] &store=[&]|
+  test:assert $expectation {|@reality|
+    and (subset $expectation $reality) (subset $reality $expectation)
+  } &name=assert-differences-empty &fixtures=$fixtures &store=$store
 }
 
 var tests = [Fun.elv
@@ -524,33 +618,61 @@ var tests = [Fun.elv
    (test:is-one [&1=[a c] &2=[b]])
    { map-invert [&a=1 &b=2 &c=1] &lossy=$false }]
 
+  [rand-sample
+   'Returns items from `@arr` with random probability of 0.0-1.0'
+   (test:is-nothing)
+   { rand-sample 0 (range 10) }
+   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4) (num 5) (num 6) (num 7) (num 8) (num 9))
+   { rand-sample 1 (range 10) }]
+
   '# Set functions'
   [union
    'Set theory union'
-   (test:is-differences-empty a b c d e f g h i)
+   (assert-differences-empty a b c d e f g h i)
    { union [a b c] [d b e f] [g e h i] }
    { put [a b c] [d b e f] [g e h i] | union }]
 
   [difference
    'Subtracts a bunch of sets from another'
-   (test:is-differences-empty b c)
+   (assert-differences-empty b c)
    { difference [a b c] [a d e] }
 
-   (test:is-differences-empty c)
+   (assert-differences-empty c)
    { difference [a b c] [a d e] [b f g] }
    { put [a d e] [b f g] | difference [a b c] }]
 
   [intersection
    'Set theory intersection - returns only the items in all sets.'
-   (test:is-differences-empty a b c)
+   (assert-differences-empty a b c)
    { intersection [a b c] }
 
-   (test:is-differences-empty b c)
+   (assert-differences-empty b c)
    { intersection [a b c] [b c d] }
    { put [a b c] [b c d] | intersection }
 
-   (test:is-differences-empty c)
+   (assert-differences-empty c)
    { intersection [a b c] [b c d] [c d e] }]
+
+  [subset
+   'Predicate - returns true if l1 is a subset of l2.  False otherwise'
+   (test:is-one $true)
+   { subset [a b c] [d e f b a c]}
+   (test:is-one $false)
+   { subset [d e f b a c] [c b a]}]
+
+  [superset
+   'Predicate - returns true if l1 is a superset of l2.  False otherwise'
+   (test:is-one $true)
+   { superset [d e f b a c] [a b c]}
+   (test:is-one $false)
+   { superset [a b c] [d e f b a c]}]
+
+  [overlaps
+   'Predicate - returns true if l1 & l2 have a non-empty intersection.'
+   (test:is-one $true)
+   { overlaps [a b c d e f g] [e f g h i j k] }
+   (test:is-one $false)
+   { overlaps [a b c] [d e f] }]
 
   '# Map functions'
   [update
@@ -748,13 +870,13 @@ var tests = [Fun.elv
   [distinct
    "Returns a set of the elements in `@arr`."
    "Does not care about maintaining order."
-   (test:is-differences-empty 1 2 3 4 5)
+   (assert-differences-empty 1 2 3 4 5)
    { distinct 1 2 2 3 3 3 4 4 4 4 5 5 5 5 5 }
    { distinct 1 2 3 2 3 3 4 4 5 5 5 4 4 5 5 }
    { put 1 2 2 3 3 3 4 4 4 4 5 5 5 5 5 | distinct }
 
    "It doesn't care about mathematical equality"
-   (test:is-differences-empty 1 1.0 (num 1) (num 1.0))
+   (assert-differences-empty 1 1.0 (num 1) (num 1.0))
    { distinct 1 1.0 (num 1) (num 1.0) }]
 
   [unique
@@ -844,6 +966,49 @@ var tests = [Fun.elv
                  [(num 12)])
    { partition-all 3 (range 13) }
    { range 13 | partition-all 3 }]
+
+  [iterate
+   "Returns an array of `(f x), (f (f x)), (f (f (f x)) ...)`, up to the nth element."
+   (test:is-each (num 1) (num 2) (num 3) (num 4) (num 5) (num 6) (num 7) (num 8) (num 9) (num 10))
+   { iterate $base:inc~ 10 (num 1)}
+
+   'My favorite example of iterate is to generate fibonacci numbers.  In increasingly functional style:'
+   (test:is-each (num 1) (num 1) (num 2) (num 3) (num 5) (num 8) (num 13) (num 21) (num 34) (num 55))
+   { iterate {|l| put [$l[1] (+ $l[0] $l[1])]} 10 [(num 1) (num 1)] | each $base:first~ }
+   { iterate (destruct {|a b| put [$b (+ $a $b)]}) 10 [(num 1) (num 1)] | each $base:first~ }
+   { iterate (box (destruct (juxt $second~ $'+~'))) 10 [(num 1) (num 1)] | each $base:first~ }]
+
+  [take-nth
+   "Emits every nth element."
+   (test:is-each (num 0) (num 2) (num 4) (num 6) (num 8))
+   { take-nth 2 (range 10) }
+   { range 10 | take-nth 2 }]
+
+  [take-while
+   "Emits items until `(f x)` yields an empty or falsey value."
+   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4))
+   { take-while (complement (partial $'<=~' 5)) (range 10) }
+   { range 10 | take-while {|n| < $n 5 } }
+   { take-while {|n| if (< $n 5) { put $true } } (range 10) }]
+
+  [drop-while
+   "Emits items until `(f x)` yields a non-empty or truthy value."
+   (test:is-each (num 5) (num 6) (num 7) (num 8) (num 9))
+   { drop-while (complement (partial $'<=~' 5)) (range 10) }
+   { range 10 | drop-while {|n| < $n 5 } }
+   { drop-while {|n| if (< $n 5) { put $true } } (range 10) }]
+
+  [drop-last
+   'Drops the last n elements of `@arr`.'
+   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4) (num 5) (num 6) (num 7))
+   { drop-last 2 (range 10) }
+   { range 10 | drop-last 2 }]
+
+  [butlast
+   'Drops the last element of `@arr`.'
+   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4) (num 5) (num 6) (num 7) (num 8))
+   { butlast (range 10) }
+   { range 10 | butlast }]
 
   '# Predicate runners'
   [some

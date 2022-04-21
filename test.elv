@@ -97,31 +97,6 @@ fn is-each {
   } &name=is-each &fixtures=$fixtures &store=$store
 }
 
-fn is-differences-empty {
-  |@expectation &fixtures=[&] &store=[&]|
-  assert $expectation {|@reality|
-    var to-map = {|l|
-      var m = [&]
-      for x $l {
-        set m = (assoc $m $x $nil)
-      }
-      put $m
-    }
-    var ex re = ($to-map $expectation) ($to-map $reality)
-
-    var diff = {|a b|
-      for x [(keys $a)] {
-        set b = (dissoc $b $x)
-      }
-      put [(keys $b)]
-    }
-    var diff1 diff2 = ($diff $ex $re) ($diff $re $ex)
-
-    and (eq $diff1 []) (eq $diff2 [])
-
-  } &name=is-differences-empty &fixtures=$fixtures &store=$store
-}
-
 fn is-error {
   |&fixtures=[&] &store=[&]|
   assert exception {|@reality|
@@ -555,7 +530,6 @@ var tests = [Test.elv
    { assert foo { put $true } | is-assertion (one) }
    { is-one foo | is-assertion (one) }
    { is-each foo bar | is-assertion (one) }
-   { is-differences-empty foo bar | is-assertion (one) }
    { is-error | is-assertion (one) }
    { is-something | is-assertion (one) }
    { is-nothing | is-assertion (one) }
@@ -618,7 +592,6 @@ var tests = [Test.elv
    (is-one $true)
    { (is-one foo)[f] { put foo } | put (one)[bool] }
    { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
-   { (is-differences-empty foo bar)[f] { put bar; put foo } | put (one)[bool] }
    { (is-error)[f] { fail foobar } | put (one)[bool] }
    { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
    { (is-nothing)[f] { } | put (one)[bool] }
