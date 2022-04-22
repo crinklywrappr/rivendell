@@ -9,7 +9,7 @@
 8. [working-test-runner](#working-test-runner)
 ***
 ## testing-status
-60 tests passed out of 60
+62 tests passed out of 62
 
 100% of tests are passing
 
@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { }
-▶ [&name=foo &f=<closure 0xc0002fbbc0> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000a0dc80> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc0001cc3c0> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc0003dd080> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000866900> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000a04240> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0001ccf00> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc0003baa80> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
@@ -152,6 +152,7 @@ general use-cases for each assertion
 (is-one foo)[f] { put foo } | put (one)[bool]
 (is-each foo bar)[f] { put foo; put bar } | put (one)[bool]
 (is-error)[f] { fail foobar } | put (one)[bool]
+(is-ok)[f] { put foobar } | put (one)[bool]
 (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool]
 (is-nothing)[f] { } | put (one)[bool]
 (is-list)[f] { put [a b c] } | put (one)[bool]
@@ -186,6 +187,10 @@ general use-cases for each assertion
 ```elvish
 (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool]
 ▶ $true
+```
+```elvish
+(is-ok)[f] { fail foobar } | put (one)[bool]
+▶ $false
 ```
  
 Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance

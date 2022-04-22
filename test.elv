@@ -106,6 +106,14 @@ fn is-error {
   } &name=is-error &fixtures=$fixtures &store=$store
 }
 
+fn is-ok {
+  |&fixtures=[&] &store=[&]|
+  assert ok {|@reality|
+    or (eq $reality []) ^
+       (not-eq (kind-of $reality[0]) exception)
+  } &name=is-error &fixtures=$fixtures &store=$store
+}
+
 fn is-something {
   |&fixtures=[&] &store=[&]|
   assert something {|@reality|
@@ -593,6 +601,7 @@ var tests = [Test.elv
    { (is-one foo)[f] { put foo } | put (one)[bool] }
    { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
    { (is-error)[f] { fail foobar } | put (one)[bool] }
+   { (is-ok)[f] { put foobar } | put (one)[bool] }
    { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
    { (is-nothing)[f] { } | put (one)[bool] }
    { (is-list)[f] { put [a b c] } | put (one)[bool] }
@@ -613,6 +622,8 @@ var tests = [Test.elv
    { (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
 
    (is-one $false)
+   { (is-ok)[f] { fail foobar } | put (one)[bool] }
+
    'Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance'
    { (is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }]
 

@@ -131,7 +131,6 @@ Basic building blocks for building additional assertions.
 These are fundamental assertions & simple examples for how to write an
 assertion.
 
-#+TODO: support ~$ok~ assertion - tests for simple success of test fn
 #+TODO: ~and~ & ~or~ assertions to support assertion/predicate composition
 
 
@@ -157,6 +156,14 @@ assertion.
       and (== (count $reality) 1) ^
           (not-eq $@reality $ok) ^
           (eq (kind-of $@reality) exception)
+    } &name=is-error &fixtures=$fixtures &store=$store
+  }
+
+  fn is-ok {
+    |&fixtures=[&] &store=[&]|
+    assert ok {|@reality|
+      or (eq $reality []) ^
+         (not-eq (kind-of $reality[0]) exception)
     } &name=is-error &fixtures=$fixtures &store=$store
   }
 
@@ -691,6 +698,7 @@ Tests for this module
      { (is-one foo)[f] { put foo } | put (one)[bool] }
      { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
      { (is-error)[f] { fail foobar } | put (one)[bool] }
+     { (is-ok)[f] { put foobar } | put (one)[bool] }
      { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
      { (is-nothing)[f] { } | put (one)[bool] }
      { (is-list)[f] { put [a b c] } | put (one)[bool] }
@@ -711,6 +719,8 @@ Tests for this module
      { (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
 
      (is-one $false)
+     { (is-ok)[f] { fail foobar } | put (one)[bool] }
+
      'Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance'
      { (is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }]
 
