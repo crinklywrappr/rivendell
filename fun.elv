@@ -37,6 +37,64 @@ fn kvs {|m|
   } [(keys $m)]
 }
 
+fn get-in {|m @ks|
+  set @ks = (base:check-pipe $ks)
+  var fin = $true
+  for k $ks {
+    if (has-key $m $k) {
+      set m = $m[$k]
+    } else {
+      set fin = $false
+      break
+    }
+  }
+  if $fin { put $m }
+}
+
+fn assoc-in {|m ks v|
+  var c = (count $ks)
+
+  if (not-eq (kind-of $m) map) {
+    set m = [&]
+  }
+
+  if (== $c 1) {
+    assoc $m $ks[0] $v
+  } elif (> $c 1) {
+    var k = $ks[0]
+    if (has-key $m $k) {
+      assoc $m $k (assoc-in $m[$k] (base:rest $ks) $v)
+    } else {
+      set m = (assoc $m $k [&])
+      assoc $m $k (assoc-in $m[$k] (base:rest $ks) $v)
+    }
+  } else {
+    put $m
+  }
+}
+
+fn update-in {|m ks f|
+  var c = (count $ks)
+
+  if (== $c 1) {
+    var k = $ks[0]
+    if (has-key $m $k) {
+      update $m $k $f
+    } else {
+      put $m
+    }
+  } elif (> $c 1) {
+    var k = $ks[0]
+    if (has-key $m $k) {
+      assoc $m $k (update-in $m[$k] (base:rest $ks) $f)
+    } else {
+      put $m
+    }
+  } else {
+    put $m
+  }
+}
+
 fn destruct {|f|
   put {|x|
     $f (all $x)
@@ -71,6 +129,19 @@ fn constantly {|@xs|
   set @xs = (base:check-pipe $xs)
   put {|@_|
     put $@xs
+  }
+}
+
+fn memoize {|f|
+  var cache = [&]
+  put {|@args|
+    if (has-key $cache $args) {
+      all $cache[$args]
+    } else {
+      var @res = ($f $@args)
+      set cache = (assoc $cache $args $res)
+      all $res
+    }
   }
 }
 
@@ -520,7 +591,7 @@ fn difference {|l1 @lists|
   union $@lists ^
   | reduce {|a b|
       dissoc $a $b
-    } ( into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
+    } (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
   | keys (one)
 }
 
@@ -550,6 +621,17 @@ fn superset {|l1 l2|
 
 fn overlaps {|l1 l2|
   some (partial $has-key~ (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil))) $@l2
+}
+
+fn select-keys {|m @ks|
+  set @ks = (base:check-pipe $ks)
+  reduce {|a b|
+    if (has-key $m $b) {
+      assoc $a $b $m[$b]
+    } else {
+      put $a
+    }
+  } [&] $@ks
 }
 
 fn assert-equal-sets {|@expectation &fixtures=[&] &store=[&]|
@@ -747,6 +829,46 @@ var tests = [Fun.elv
    { put [&a=1 &b=2] [&a=3 &c=4] | merge-with $'+~' }
    { put $'+~' [&a=1 &b=2] [&a=3 &c=4] | merge-with (all) }]
 
+  [select-keys
+   'Returns a map with the requested keys.'
+   (test:is-one [&a=1 &c=3])
+   { select-keys [&a=1 &b=2 &c=3] a c }
+   { put a c | select-keys [&a=1 &b=2 &c=3] }
+   "It won't add keys which aren't there."
+   { select-keys [&a=1 &b=2 &c=3] a c d e f g}
+   "It also works with lists."
+   (test:is-one [&0=1 &2=3])
+   { select-keys [1 2 3] 0 0 2 }]
+
+  [get-in
+   'Returns nested elements.  Nonrecursive.'
+   (test:is-one v)
+   { get-in [&a=[&b=[&c=v]]] a b c }
+   { put a b c | get-in [&a=[&b=[&c=v]]] }
+   'Works with lists.'
+   { get-in [0 1 [2 3 [4 v]]] 2 2 1 }
+   'Returns nothing when not found.'
+   (test:is-nothing)
+   { get-in [&a=1 &b=2 &c=3] a b c }]
+
+  [assoc-in
+   'Nested assoc.  Recursive'
+   (test:is-one [&a=[&b=[&c=v]]])
+   { assoc-in [&] [a b c] v }
+   { assoc-in [&a=1] [a b c] v }
+   { assoc-in [&a=[&b=1]] [a b c] v }
+   { assoc-in [&a=[&b=[&c=1]]] [a b c] v }
+   (test:is-one [&a=[&b=[&c=v]] &b=2])
+   { assoc-in [&a=1 &b=2] [a b c] v }]
+
+  [update-in
+   'Nested update. Recursive.'
+   (test:is-one [&a=[&b=[&c=(num 2)]]])
+   { update-in [&a=[&b=[&c=(num 1)]]] [a b c] $base:inc~ }
+   'Returns the map unchanged if not found.'
+   (test:is-one [&a=1 &b=2 &c=3])
+   { update-in [&a=1 &b=2 &c=3] [a b c] $base:inc~ }]
+
   '# Function modifiers'
   [destruct
    'Works a bit like call, but returns a function.'
@@ -807,6 +929,15 @@ var tests = [Fun.elv
    { (box {|@xs| put $@xs}) 1 2 3 }
    { put 1 2 3 | (box {|@xs| put $@xs}) }
    { put {|@xs| put $@xs} | box (one) | (one) 1 2 3 }]
+
+  [memoize
+   'Caches function results so they return more quickly.  Function must be pure.'
+   (test:is-fn)
+   { memoize {|n| sleep 1; * $n 10} }
+   'Here, `$fixtures[f]` long running function.'
+   (test:is-count 2 &fixtures=[&f=(memoize {|n| sleep 1; * $n 10})])
+   {|fixtures| time { $fixtures[f] 10 } | all }
+   {|fixtures| time { $fixtures[f] 10 } | all }]
 
   '# Reduce & company'
   [reduce
