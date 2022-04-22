@@ -664,10 +664,23 @@ Like the others, but higher level.
 Some additional assertions for tests.
 
 #+begin_src elvish :tangle ./fun.elv
-  fn assert-differences-empty {|@expectation &fixtures=[&] &store=[&]|
+  fn assert-equal-sets {|@expectation &fixtures=[&] &store=[&]|
     test:assert $expectation {|@reality|
-      and (subset $expectation $reality) (subset $reality $expectation)
+      eq (into [&] $@expectation &keyfn=$put~ &valfn=(constantly $nil)) ^
+         (into [&] $@reality &keyfn=$put~ &valfn=(constantly $nil))
     } &name=assert-differences-empty &fixtures=$fixtures &store=$store
+  }
+
+  fn assert-subset-of {|@expectation &fixtures=[&] &store=[&]|
+    test:assert $expectation {|@reality|
+      subset $reality $expectation
+    } &name=assert-subset-of &fixtures=$fixtures &store=$store
+  }
+
+  fn assert-superset-of {|@expectation &fixtures=[&] &store=[&]|
+    test:assert $expectation {|@reality|
+      superset $reality $expectation
+    } &name=assert-superset-of &fixtures=$fixtures &store=$store
   }
 #+end_src
 
@@ -879,29 +892,29 @@ Tests for this module.
     '# Set functions'
     [union
      'Set theory union'
-     (assert-differences-empty a b c d e f g h i)
+     (assert-equal-sets a b c d e f g h i)
      { union [a b c] [d b e f] [g e h i] }
      { put [a b c] [d b e f] [g e h i] | union }]
 
     [difference
      'Subtracts a bunch of sets from another'
-     (assert-differences-empty b c)
+     (assert-equal-sets b c)
      { difference [a b c] [a d e] }
 
-     (assert-differences-empty c)
+     (assert-equal-sets c)
      { difference [a b c] [a d e] [b f g] }
      { put [a d e] [b f g] | difference [a b c] }]
 
     [intersection
      'Set theory intersection - returns only the items in all sets.'
-     (assert-differences-empty a b c)
+     (assert-equal-sets a b c)
      { intersection [a b c] }
 
-     (assert-differences-empty b c)
+     (assert-equal-sets b c)
      { intersection [a b c] [b c d] }
      { put [a b c] [b c d] | intersection }
 
-     (assert-differences-empty c)
+     (assert-equal-sets c)
      { intersection [a b c] [b c d] [c d e] }]
 
     [subset
@@ -1121,13 +1134,13 @@ Tests for this module.
     [distinct
      "Returns a set of the elements in `@arr`."
      "Does not care about maintaining order."
-     (assert-differences-empty 1 2 3 4 5)
+     (assert-equal-sets 1 2 3 4 5)
      { distinct 1 2 2 3 3 3 4 4 4 4 5 5 5 5 5 }
      { distinct 1 2 3 2 3 3 4 4 5 5 5 4 4 5 5 }
      { put 1 2 2 3 3 3 4 4 4 4 5 5 5 5 5 | distinct }
 
      "It doesn't care about mathematical equality"
-     (assert-differences-empty 1 1.0 (num 1) (num 1.0))
+     (assert-equal-sets 1 1.0 (num 1) (num 1.0))
      { distinct 1 1.0 (num 1) (num 1.0) }]
 
     [unique
