@@ -490,6 +490,7 @@ fn map-invert {|m &lossy=$true|
 }
 
 fn rand-sample {|n @arr|
+  set @arr = (base:check-pipe $arr)
   for x $arr {
     if (<= (rand) $n) {
       put $x
@@ -498,6 +499,7 @@ fn rand-sample {|n @arr|
 }
 
 fn sample {|n @arr|
+  set @arr = (base:check-pipe $arr)
   var rand-idx = (comp $base:second~ $count~ (partial $randint~ 0))
   var f = (comp (juxt $base:second~ $rand-idx) (juxt $base:get~ $base:pluck~))
   iterate (box $f) (base:inc $n) ['' $arr] | drop 1 | each $base:first~
@@ -535,11 +537,15 @@ fn intersection {|@lists|
 }
 
 fn subset {|l1 l2|
-  every (partial $has-key~ (into [&] $@l2 &keyfn=$put~ &valfn=(constantly $nil))) $@l1
+  or (eq $l1 []) ^
+     (and (not-eq $l2 []) ^
+          (every (partial $has-key~ (into [&] $@l2 &keyfn=$put~ &valfn=(constantly $nil))) $@l1))
 }
 
 fn superset {|l1 l2|
-  every (partial $has-key~ (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil))) $@l2
+  or (eq $l2 []) ^
+     (and (not-eq $l1 []) ^
+          (every (partial $has-key~ (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil))) $@l2))
 }
 
 fn overlaps {|l1 l2|
@@ -635,8 +641,22 @@ var tests = [Fun.elv
    'Returns items from `@arr` with random probability of 0.0-1.0'
    (test:is-nothing)
    { rand-sample 0 (range 10) }
-   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4) (num 5) (num 6) (num 7) (num 8) (num 9))
-   { rand-sample 1 (range 10) }]
+   (assert-subset-of (range 10))
+   { rand-sample 0.5 (range 10) }
+   (test:is-each (range 10))
+   { rand-sample 1 (range 10) }
+   { range 10 | rand-sample 1 }]
+
+  [sample
+   'Take n random samples from the input'
+   (test:is-all (test:is-count 5) (assert-subset-of (range 10)))
+   { sample 5 (range 10) }
+   { range 10 | sample 5 }]
+
+  [shuffle
+   (test:is-all (test:is-count 10) (assert-equal-sets (range 10)))
+   { shuffle (range 10) }
+   { range 10 | shuffle }]
 
   '# Set functions'
   [union
