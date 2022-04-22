@@ -3,15 +3,19 @@ use str
 use re
 
 fn make-assertion {
-  |name f &fixtures=[&] &store=[&]|
-  put [&name=$name &f=$f &fixtures=$fixtures &store=$store]
+  |name f pred &fixtures=[&] &store=[&]|
+  put [&name=$name &f=$f &pred=$pred &fixtures=$fixtures &store=$store]
 }
 
 fn is-assertion {
   |form|
   and (eq (kind-of $form) map) ^
+      has-key $form name ^
+      (eq (kind-of $form[name]) string) ^
       has-key $form f ^
-      (eq (kind-of $form[f]) fn)
+      (eq (kind-of $form[f]) fn) ^
+      has-key $form pred ^
+      (eq (kind-of $form[pred]) fn)
 }
 
 fn call-test {
@@ -79,7 +83,7 @@ fn assert {
     put [&bool=$bool &expect=$expect &reality=$res
          &test=(str:trim $test-fn[body] ' ') &messages=$messages
          &store=$new-store]
-  } &fixtures=$fixtures &store=$store
+  } $predicate &fixtures=$fixtures &store=$store
 }
 
 fn is-one {
@@ -111,7 +115,7 @@ fn is-ok {
   assert ok {|@reality|
     or (eq $reality []) ^
        (not-eq (kind-of $reality[0]) exception)
-  } &name=is-error &fixtures=$fixtures &store=$store
+  } &name=is-ok &fixtures=$fixtures &store=$store
 }
 
 fn is-something {
@@ -521,18 +525,18 @@ var tests = [Test.elv
   [make-assertion
    'lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
    (is-map)
-   { make-assertion foo { } }
-   { make-assertion foo { } &fixtures=[&foo=bar]}
-   { make-assertion foo { } &store=[&frob=nitz]}
-   { make-assertion foo { } &fixtures=[&foo=bar] &store=[&frob=nitz]}]
+   { make-assertion foo { } { } }
+   { make-assertion foo { } { } &fixtures=[&foo=bar]}
+   { make-assertion foo { } { } &store=[&frob=nitz]}
+   { make-assertion foo { } { } &fixtures=[&foo=bar] &store=[&frob=nitz]}]
 
   [is-assertion
    '`is-assertion` is a predicate for assertions.'
    (is-one $true)
-   { make-assertion foo { put foo } | is-assertion (one) }
+   { make-assertion foo { put foo } { } | is-assertion (one) }
 
    '`is-assertion` only cares about the presence of `f` key'
-   { make-assertion foo { } | dissoc (one) fixtures | dissoc (one) store | is-assertion (one) }
+   { make-assertion foo { } { } | dissoc (one) fixtures | dissoc (one) store | is-assertion (one) }
 
    'All other assertions satisfy the predicate'
    { assert foo { put $true } | is-assertion (one) }
