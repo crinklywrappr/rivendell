@@ -86,6 +86,41 @@ fn assert {
   } $predicate &fixtures=$fixtures &store=$store
 }
 
+fn is-all {
+  |@assertions &fixtures=[&] &store=[&]|
+  assert all {|@reality &fixtures=[&] &store=[&]|
+    var msg b
+    var messages = [""]
+    var bool = $true
+    for assertion $assertions {
+      set b @msg = (call-predicate $assertion[pred] $@reality &fixtures=$fixtures &store=$store)
+      if (eq $b $false) {
+        set bool = $false
+        set messages = [(str:trim-left $messages[0]', '$assertion[name] ', ') $@msg]
+      }
+    }
+    if $bool {
+      set messages = []
+    }
+    put $bool $@messages
+  } &name=is-all &fixtures=$fixtures &store=$store
+}
+
+fn is-any {
+  |@assertions &fixtures=[&] &store=[&]|
+  assert any {|@reality &fixtures=[&] &store=[&]|
+    var b
+    var bool = $false
+    for assertion $assertions {
+      set b @_ = (call-predicate $assertion[pred] $@reality &fixtures=$fixtures &store=$store)
+      if (eq $b $true) {
+        set bool = $true
+      }
+    }
+    put $bool
+  } &name=is-any &fixtures=$fixtures &store=$store
+}
+
 fn is-one {
   |expectation &fixtures=[&] &store=[&]|
   assert $expectation {|@reality|
@@ -99,6 +134,13 @@ fn is-each {
   assert $expectation {|@reality|
     eq $expectation $reality
   } &name=is-each &fixtures=$fixtures &store=$store
+}
+
+fn is-count {
+  |c &fixtures=[&] &store=[&]|
+  assert 'count='$c {|@reality|
+    eq (num $c) (count $reality)
+  } &name=is-count &fixtures=$fixtures &store=$store
 }
 
 fn is-error {
@@ -540,8 +582,11 @@ var tests = [Test.elv
 
    'All other assertions satisfy the predicate'
    { assert foo { put $true } | is-assertion (one) }
+   { is-all | is-assertion (one) }
+   { is-any | is-assertion (one) }
    { is-one foo | is-assertion (one) }
    { is-each foo bar | is-assertion (one) }
+   { is-count 3 | is-assertion (one) }
    { is-error | is-assertion (one) }
    { is-something | is-assertion (one) }
    { is-nothing | is-assertion (one) }
@@ -604,6 +649,7 @@ var tests = [Test.elv
    (is-one $true)
    { (is-one foo)[f] { put foo } | put (one)[bool] }
    { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
+   { (is-count 3)[f] { put a b c } | put (one)[bool] }
    { (is-error)[f] { fail foobar } | put (one)[bool] }
    { (is-ok)[f] { put foobar } | put (one)[bool] }
    { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
@@ -613,6 +659,10 @@ var tests = [Test.elv
    { (is-fn)[f] { put { } } | put (one)[bool] }
    { (is-string)[f] { put foo } | put (one)[bool] }
    { (is-nil)[f] { put $nil } | put (one)[bool] }
+
+   '`is-all/is-any` are high-level assertions which take other assertions.'
+   { (is-all (is-each a b c) (is-count 3))[f] { put a b c } | put (one)[bool] }
+   { (is-any (is-each a b c) (is-count 4))[f] { put a b c } | put (one)[bool] }
 
    '`is-coll` works on lists and maps'
    { (is-coll)[f] { put [a b c] } | put (one)[bool] }

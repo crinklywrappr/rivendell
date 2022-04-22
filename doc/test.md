@@ -9,7 +9,7 @@
 8. [working-test-runner](#working-test-runner)
 ***
 ## testing-status
-62 tests passed out of 62
+68 tests passed out of 68
 
 100% of tests are passing
 
@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { } { }
-▶ [&name=foo &f=<closure 0xc0006b6b40> &pred=<closure 0xc0006b6c00> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0008f35c0> &pred=<closure 0xc0008f3680> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc000a94f00> &pred=<closure 0xc000a94fc0> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc0008f3b00> &pred=<closure 0xc0008f3bc0> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0002940c0> &pred=<closure 0xc000294180> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc00023c6c0> &pred=<closure 0xc00023c9c0> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000294240> &pred=<closure 0xc000294300> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc00090f500> &pred=<closure 0xc00090f5c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
@@ -51,8 +51,11 @@ make-assertion foo { } { } | dissoc (one) fixtures | dissoc (one) store | is-ass
 All other assertions satisfy the predicate
 ```elvish
 assert foo { put $true } | is-assertion (one)
+is-all | is-assertion (one)
+is-any | is-assertion (one)
 is-one foo | is-assertion (one)
 is-each foo bar | is-assertion (one)
+is-count 3 | is-assertion (one)
 is-error | is-assertion (one)
 is-something | is-assertion (one)
 is-nothing | is-assertion (one)
@@ -151,6 +154,7 @@ general use-cases for each assertion
 ```elvish
 (is-one foo)[f] { put foo } | put (one)[bool]
 (is-each foo bar)[f] { put foo; put bar } | put (one)[bool]
+(is-count 3)[f] { put a b c } | put (one)[bool]
 (is-error)[f] { fail foobar } | put (one)[bool]
 (is-ok)[f] { put foobar } | put (one)[bool]
 (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool]
@@ -160,6 +164,15 @@ general use-cases for each assertion
 (is-fn)[f] { put { } } | put (one)[bool]
 (is-string)[f] { put foo } | put (one)[bool]
 (is-nil)[f] { put $nil } | put (one)[bool]
+```
+```elvish
+▶ $true
+```
+ 
+`is-all/is-any` are high-level assertions which take other assertions.
+```elvish
+(is-all (is-each a b c) (is-count 3))[f] { put a b c } | put (one)[bool]
+(is-any (is-each a b c) (is-count 4))[f] { put a b c } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
