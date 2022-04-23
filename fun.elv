@@ -318,6 +318,24 @@ fn unique {|@args &count=$false|
   }
 }
 
+fn replace {|smap coll|
+  if (eq (kind-of $smap) list) {
+    set smap = (reduce-kv $assoc~ [&] (all $smap))
+  }
+
+  if (eq (kind-of $coll) map) {
+    set @coll = (kvs $coll)
+  }
+
+  each {|x|
+    if (has-key $smap $x) {
+      put $smap[$x]
+    } else {
+      put $x
+    }
+  } $coll
+}
+
 fn concat {|@lists|
   set @lists = (base:check-pipe $lists)
   reduce $base:concat2~ [] $@lists
@@ -596,10 +614,13 @@ fn union {|@lists|
 fn difference {|l1 @lists|
   set @lists = (base:check-pipe $lists)
   union $@lists ^
-  | reduce {|a b|
-      dissoc $a $b
-    } (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
+  | reduce $dissoc~ (into [&] $@l1 &keyfn=$put~ &valfn=(constantly $nil)) (all) ^
   | keys (one)
+}
+
+fn disj {|l @els|
+  set @els = (base:check-pipe $els)
+  reduce $dissoc~ (into [&] $@l &keyfn=$put~ &valfn=(constantly $nil)) $@els | keys (one)
 }
 
 fn intersection {|@lists|
@@ -789,8 +810,14 @@ var tests = [Fun.elv
    { difference [a b c] [a d e] [b f g] }
    { put [a d e] [b f g] | difference [a b c] }]
 
+  [disj
+   'Like difference, but subtracts individual elements'
+   (assert-equal-sets a b c f)
+   { disj [a b c d e f g] d e g }
+   { put d e g | disj [a b c d e f g] }]
+
   [intersection
-   'Set theory intersection - returns only the items in all sets.'
+   'Set theory intersection - returns only the items in all sets.'  
    (assert-equal-sets a b c)
    { intersection [a b c] }
 
@@ -1114,6 +1141,16 @@ var tests = [Fun.elv
    "It doesn't care about mathematical equality"
    (test:is-each 1 1.0 (num 1) (num 1.0))
    { unique 1 1.0 (num 1) (num 1.0) }]
+
+  [replace
+   'Returns an "array" with elements of `coll` replaced according to `smap`.'
+   'Works with combinations of lists & maps.'
+   (test:is-each zeroth second fourth zeroth)
+   { replace [zeroth first second third fourth] [(num 0) (num 2) (num 4) (num 0)] }
+   (test:is-each four two 3 four 5 6 two)
+   { replace [&2=two &4=four] [4 2 3 4 5 6 2] }
+   (test:is-one [&name=jack &postcode=wd12 &id=123])
+   { replace [&[city london]=[postcode wd12]] [&name=jack &city=london &id=123] | into [&] }]
 
   [interleave
    'Returns an "array" of the first item in each list, then the second, etc.'

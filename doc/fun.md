@@ -14,64 +14,66 @@
 13. [shuffle](#shuffle)
 14. [union](#union)
 15. [difference](#difference)
-16. [intersection](#intersection)
-17. [subset](#subset)
-18. [superset](#superset)
-19. [overlaps](#overlaps)
-20. [update](#update)
-21. [vals](#vals)
-22. [kvs](#kvs)
-23. [merge](#merge)
-24. [merge-with](#merge-with)
-25. [select-keys](#select-keys)
-26. [get-in](#get-in)
-27. [assoc-in](#assoc-in)
-28. [update-in](#update-in)
-29. [rename-keys](#rename-keys)
-30. [index](#index)
-31. [destruct](#destruct)
-32. [complement](#complement)
-33. [partial](#partial)
-34. [juxt](#juxt)
-35. [constantly](#constantly)
-36. [comp](#comp)
-37. [box](#box)
-38. [memoize](#memoize)
-39. [repeatedly](#repeatedly)
-40. [reduce](#reduce)
-41. [reduce-kv](#reduce-kv)
-42. [reductions](#reductions)
-43. [filter](#filter)
-44. [remove](#remove)
-45. [into](#into)
-46. [reverse](#reverse)
-47. [distinct](#distinct)
-48. [unique](#unique)
-49. [interleave](#interleave)
-50. [interpose](#interpose)
-51. [partition](#partition)
-52. [partition-all](#partition-all)
-53. [iterate](#iterate)
-54. [take-nth](#take-nth)
-55. [take-while](#take-while)
-56. [drop-while](#drop-while)
-57. [drop-last](#drop-last)
-58. [butlast](#butlast)
-59. [some](#some)
-60. [first-pred](#first-pred)
-61. [every](#every)
-62. [not-every](#not-every)
-63. [not-any](#not-any)
-64. [keep](#keep)
-65. [map](#map)
-66. [mapcat](#mapcat)
-67. [map-indexed](#map-indexed)
-68. [zipmap](#zipmap)
-69. [keep-indexed](#keep-indexed)
-70. [pivot](#pivot)
+16. [disj](#disj)
+17. [intersection](#intersection)
+18. [subset](#subset)
+19. [superset](#superset)
+20. [overlaps](#overlaps)
+21. [update](#update)
+22. [vals](#vals)
+23. [kvs](#kvs)
+24. [merge](#merge)
+25. [merge-with](#merge-with)
+26. [select-keys](#select-keys)
+27. [get-in](#get-in)
+28. [assoc-in](#assoc-in)
+29. [update-in](#update-in)
+30. [rename-keys](#rename-keys)
+31. [index](#index)
+32. [destruct](#destruct)
+33. [complement](#complement)
+34. [partial](#partial)
+35. [juxt](#juxt)
+36. [constantly](#constantly)
+37. [comp](#comp)
+38. [box](#box)
+39. [memoize](#memoize)
+40. [repeatedly](#repeatedly)
+41. [reduce](#reduce)
+42. [reduce-kv](#reduce-kv)
+43. [reductions](#reductions)
+44. [filter](#filter)
+45. [remove](#remove)
+46. [into](#into)
+47. [reverse](#reverse)
+48. [distinct](#distinct)
+49. [unique](#unique)
+50. [replace](#replace)
+51. [interleave](#interleave)
+52. [interpose](#interpose)
+53. [partition](#partition)
+54. [partition-all](#partition-all)
+55. [iterate](#iterate)
+56. [take-nth](#take-nth)
+57. [take-while](#take-while)
+58. [drop-while](#drop-while)
+59. [drop-last](#drop-last)
+60. [butlast](#butlast)
+61. [some](#some)
+62. [first-pred](#first-pred)
+63. [every](#every)
+64. [not-every](#not-every)
+65. [not-any](#not-any)
+66. [keep](#keep)
+67. [map](#map)
+68. [mapcat](#mapcat)
+69. [map-indexed](#map-indexed)
+70. [zipmap](#zipmap)
+71. [keep-indexed](#keep-indexed)
+72. [pivot](#pivot)
 ***
 ## testing-status
-208 tests passed out of 208
+213 tests passed out of 213
 
 100% of tests are passing
 
@@ -191,9 +193,13 @@ map-invert [&a=1 &b=2 &c=1] &lossy=$false
 Returns items from `@arr` with random probability of 0.0-1.0
 ```elvish
 rand-sample 0 (range 10)
-rand-sample 0.5 (range 10)
 ```
-MATCHES EXPECTATIONS: `[[(num 0) (num 1) (num 2) (num 3) (num 4) (num 5) (num 6) (num 7) (num 8) (num 9)] nothing]`
+MATCHES EXPECTATIONS: `[nothing]`
+```elvish
+rand-sample 0.5 (range 10)
+▶ 1
+▶ 5
+```
 ```elvish
 rand-sample 1 (range 10)
 range 10 | rand-sample 1
@@ -216,47 +222,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
+▶ 0
 ▶ 9
 ▶ 3
-▶ 0
+▶ 6
 ▶ 8
-▶ 1
 ```
 ```elvish
 range 10 | sample 5
-▶ 4
-▶ 1
-▶ 2
+▶ 7
 ▶ 8
-▶ 6
+▶ 2
+▶ 4
+▶ 3
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
-▶ 3
-▶ 6
-▶ 5
-▶ 4
-▶ 1
-▶ 7
-▶ 9
-▶ 2
 ▶ 8
 ▶ 0
+▶ 7
+▶ 3
+▶ 5
+▶ 6
+▶ 2
+▶ 9
+▶ 4
+▶ 1
 ```
 ```elvish
 range 10 | shuffle
+▶ 4
+▶ 3
+▶ 1
 ▶ 7
+▶ 2
 ▶ 8
+▶ 0
+▶ 9
 ▶ 5
 ▶ 6
-▶ 1
-▶ 9
-▶ 0
-▶ 2
-▶ 3
-▶ 4
 ```
  
 # Set functions
@@ -294,6 +300,20 @@ put [a d e] [b f g] | difference [a b c]
 ```
 ```elvish
 ▶ c
+```
+***
+## disj
+ 
+Like difference, but subtracts individual elements
+```elvish
+disj [a b c d e f g] d e g
+put d e g | disj [a b c d e f g]
+```
+```elvish
+▶ a
+▶ b
+▶ c
+▶ f
 ```
 ***
 ## intersection
@@ -646,19 +666,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc000e43740>
+▶ <closure 0xc0005346c0>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.000796933s
+▶ 1.001266254s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
+▶ 310.188µs
 ▶ 100
-▶ 255.837µs
 ```
 ***
 ## repeatedly
@@ -666,16 +686,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 136
-▶ 482
-▶ 652
-▶ 842
-▶ 576
-▶ 729
-▶ 200
-▶ 875
-▶ 362
-▶ 882
+▶ 98
+▶ 590
+▶ 228
+▶ 38
+▶ 39
+▶ 293
+▶ 823
+▶ 408
+▶ 895
+▶ 752
 ```
  
 # Reduce & company
@@ -924,6 +944,33 @@ unique 1 1.0 (num 1) (num 1.0)
 ▶ 1.0
 ▶ 1
 ▶ 1.0
+```
+***
+## replace
+ 
+Returns an "array" with elements of `coll` replaced according to `smap`.
+ 
+Works with combinations of lists & maps.
+```elvish
+replace [zeroth first second third fourth] [(num 0) (num 2) (num 4) (num 0)]
+▶ zeroth
+▶ second
+▶ fourth
+▶ zeroth
+```
+```elvish
+replace [&2=two &4=four] [4 2 3 4 5 6 2]
+▶ four
+▶ two
+▶ 3
+▶ four
+▶ 5
+▶ 6
+▶ two
+```
+```elvish
+replace [&[city london]=[postcode wd12]] [&name=jack &city=london &id=123] | into [&]
+▶ [&name=jack &postcode=wd12 &id=123]
 ```
 ***
 ## interleave
