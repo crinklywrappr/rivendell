@@ -145,6 +145,13 @@ fn memoize {|f|
   }
 }
 
+fn repeatedly {|n f|
+  while (> $n 0) {
+    $f
+    set n = (base:dec $n)
+  }
+}
+
 fn reduce {|f @arr|
   set @arr = (base:check-pipe $arr)
   var acc = $arr[0]
@@ -255,20 +262,20 @@ fn into {|container @arr ^
 fn merge {|@maps|
   set @maps = (base:check-pipe $maps)
   reduce {|a b|
-    into $a (kvs $b)
+    reduce-kv $assoc~ $a $b
   } [&] $@maps
 }
 
 fn merge-with {|f @maps|
   set @maps = (base:check-pipe $maps)
   reduce {|a b|
-    reduce {|a b|
-      if (has-key $a $b[0]) {
-        update $a $b[0] $f $b[1]
+    reduce-kv {|a k v|
+      if (has-key $a $k) {
+        update $a $k $f $v
       } else {
-        assoc $a $b[0] $b[1]
+        assoc $a $k $v
       }
-    } $a (kvs $b)
+    } $a $b
   } [&] $@maps
 }
 
@@ -634,6 +641,32 @@ fn select-keys {|m @ks|
   } [&] $@ks
 }
 
+fn rename-keys {|m kmap|
+  merge ^
+  (reduce $dissoc~ $m (keys $kmap)) ^
+  (reduce-kv {|a k v|
+      if (has-key $m $k) {
+        assoc $a $v $m[$k]
+      } else {
+        put $m
+      }
+  } [&] $kmap)
+}
+
+fn index {|maps @ks|
+  set @ks = (base:check-pipe $ks)
+  group-by {|m| select-keys $m $@ks } (all $maps)
+}
+
+fn pivot {|@maps &from_row=name &to_row=name|
+  set @maps = (base:check-pipe $maps)
+  each {|nm|
+    reduce {|a b|
+      assoc $a $b[$from_row] $b[$nm]
+    } [&$to_row=$nm] $@maps
+  } [(each (comp {|m| dissoc $m $from_row} (box $keys~)) $maps | intersection)] # common cells
+}
+
 fn assert-equal-sets {|@expectation &fixtures=[&] &store=[&]|
   test:assert $expectation {|@reality|
     eq (into [&] $@expectation &keyfn=$put~ &valfn=(constantly $nil)) ^
@@ -820,7 +853,12 @@ var tests = [Fun.elv
 
    'Uses the last value if it sees overlaps. Pay attention to the `a` in this example.'
    (test:is-one [&a=3 &b=2 &c=4])
-   { merge [&a=1 &b=2] [&a=3 &c=4] }]
+   { merge [&a=1 &b=2] [&a=3 &c=4] }
+
+   'Works with zero-length input.'
+   (test:is-one [&])
+   { merge [&] }
+   { merge [&] [&] }]
 
   [merge-with
    'Like merge, but takes a function which aggregates shared keys.'
@@ -868,6 +906,20 @@ var tests = [Fun.elv
    'Returns the map unchanged if not found.'
    (test:is-one [&a=1 &b=2 &c=3])
    { update-in [&a=1 &b=2 &c=3] [a b c] $base:inc~ }]
+
+  [rename-keys
+   'Returns map `m` with the keys in kmap renamed to the vals in kmap'
+   (test:is-one [&newa=1 &newb=2])
+   { rename-keys [&a=1 &b=2] [&a=newa &b=newb] }
+   "Won't produce key collisions"
+   (test:is-one [&b=1 &a=2])
+   { rename-keys [&a=1 &b=2] [&a=b &b=a] }]
+
+  [index
+   'returns a map with the maps grouped by the given keys'
+   (test:is-one [&[&weight=1000]=[[&name=betsy &weight=1000] [&name=shyq &weight=1000]] &[&weight=756]=[[&name=jake &weight=756]]])
+   { index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] weight }
+   { put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] }]
 
   '# Function modifiers'
   [destruct
@@ -934,10 +986,15 @@ var tests = [Fun.elv
    'Caches function results so they return more quickly.  Function must be pure.'
    (test:is-fn)
    { memoize {|n| sleep 1; * $n 10} }
-   'Here, `$fixtures[f]` long running function.'
+   'Here, `$fixtures[f]` is a long running function.'
    (test:is-count 2 &fixtures=[&f=(memoize {|n| sleep 1; * $n 10})])
    {|fixtures| time { $fixtures[f] 10 } | all }
    {|fixtures| time { $fixtures[f] 10 } | all }]
+
+  [repeatedly
+   'Takes a zero-arity function and runs it `n` times'
+   (test:is-count 10)
+   { repeatedly 10 { randint 1000 } }]
 
   '# Reduce & company'
   [reduce
@@ -1280,4 +1337,25 @@ var tests = [Fun.elv
 
    'And supply your own predicate.'
    (test:is-each [(num 1) b] [(num 3) d] [(num 5) f])
-   { keep-indexed {|i x| put [$i $x]} a b c d e f g &pred=(comp $base:first~ $base:is-odd~) }]]
+   { keep-indexed {|i x| put [$i $x]} a b c d e f g &pred=(comp $base:first~ $base:is-odd~) }]
+
+  '# Table functions'
+  [pivot
+   'Tables are an "array" of maps with a non-empty intersection of keys.'
+   'This function pivots them.'
+   (test:is-each [&name=weight &daniel=1000 &david=800 &vincent=600] ^
+                 [&name=height &daniel=900  &david=700 &vincent=500])
+   { pivot [&name=daniel  &weight=1000 &height=900] ^
+           [&name=david   &weight=800  &height=700] ^
+           [&name=vincent &weight=600  &height=500] }
+   { put [&name=daniel  &weight=1000 &height=900] ^
+         [&name=david   &weight=800  &height=700] ^
+         [&name=vincent &weight=600  &height=500] ^
+     | pivot }
+   'Pivoting adds a new column called `name` and also uses the `name` coumn to identify each row, but this is configurable.'
+   (test:is-each [&bar=weight &daniel=1000 &david=800 &vincent=600] ^
+                 [&bar=height &daniel=900  &david=700 &vincent=500])
+   { pivot [&foo=daniel  &weight=1000 &height=900] ^
+           [&foo=david   &weight=800  &height=700] ^
+           [&foo=vincent &weight=600  &height=500] ^
+           &from_row=foo &to_row=bar}]]
