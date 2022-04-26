@@ -8,14 +8,17 @@ fn listify {|@els|
 }
 
 fn first {|@els|
+  set @els = (base:check-pipe $els)
   put $els[0]
 }
 
 fn second {|@els|
+  set @els = (base:check-pipe $els)
   put $els[1]
 }
 
 fn end {|@els|
+  set @els = (base:check-pipe $els)
   put $els[-1]
 }
 
@@ -724,17 +727,20 @@ var tests = [Fun.elv
   [first
    "Returns the first element"
    (test:is-one a)
-   { first a b c }]
+   { first a b c }
+   { put a b c | first }]
 
   [second
    "Returns the second element"
    (test:is-one b)
-   { second a b c }]
+   { second a b c }
+   { put a b c | second }]
 
   [end
    "Returns the last element"
    (test:is-one c)
-   { end a b c }]
+   { end a b c }
+   { put a b c | end }]
 
   [min-key/max-key
    "Returns the x for which `(f x)`, a number, is least, or most."
