@@ -250,6 +250,90 @@ fn unique {|@iter &count=$false &cmp=$eq~|
   }
 }
 
+fn partition {|n @iter &step=$nil &pad=$nil|
+  set iter = (get-iter $@iter)
+  set step = (or $step $n)
+  use builtin
+  var buffer done
+
+  var read = {|i|
+    while (and (not ($iter[done])) (> $i 0)) {
+      put ($iter[curr])
+      nop ($iter[step])
+      set i = (base:dec $i)
+    }
+    put $i
+  }
+
+  var next = (
+    if (eq $pad $nil) {
+      if (>= $step $n) {
+        put {|_|
+          var @xs _ = ($read $step)
+          set @xs = (builtin:take $n $xs)
+          if (< (count $xs) $n) {
+            put $nil $true
+          } else {
+            put $xs $false
+          }
+        }
+      } else {
+        put {|buffer|
+          var @xs = (drop $step $buffer | take $n)
+          var @xs2 i = ($read (- $n (count $xs)))
+          if (> $i 0) {
+            put $nil $true
+          } else {
+            put (base:concat2 $xs $xs2) $false
+          }
+        }
+      }
+    } else {
+      if (>= $step $n) {
+        put {|_|
+          var @xs i = ($read $step)
+          set @xs = (builtin:take $n $xs)
+          set i = (- $n (count $xs))
+          put (base:concat2 $xs [(builtin:take $i $pad)]) (> $i 0)
+        }
+      } else {
+        put {|buffer|
+          var @xs = (drop $step $buffer | take $n)
+          var @xs2 i = ($read (- $n (count $xs)))
+          put (base:concat2 $xs $xs2 [(builtin:take $i $pad)]) (> $i 0)
+        }
+      }
+  })
+
+  var next-if = (
+    if (>= $step $n) {
+      put {|buffer done|
+        if ($iter[done]) {
+          put $nil $true
+        } else {
+          $next $buffer
+        }
+      }
+    } else {
+      put {|buffer done|
+        if $done {
+          put $nil $true
+        } else {
+          $next $buffer
+        }
+      }
+    })
+
+  make-iterator ^
+  &init={
+    nop ($iter[init])
+    set buffer done = ($next-if [] $false)
+  } ^
+  &curr={ put $buffer } ^
+  &step={ set buffer done = ($next-if $buffer $done) } ^
+  &done={ eq $buffer $nil }
+}
+
 fn remove {|f @iter|
   filter (fun:complement $f) (get-iter $@iter)
 }
@@ -268,6 +352,15 @@ fn take {|n @iter|
   &done={ >= $i $n }
 }
 
+fn take-while {|f @iter|
+  set iter = (get-iter $@iter)
+
+  nest-iterator $iter ^
+  &curr={ put ($iter[curr]) } ^
+  &step={ nop ($iter[step]) } ^
+  &done={ eq ($f ($iter[curr])) $false }
+}
+
 fn drop {|n @iter|
   set iter = (get-iter $@iter)
   var i
@@ -283,6 +376,19 @@ fn drop {|n @iter|
   &curr={ put ($iter[curr]) } ^
   &step={ nop ($iter[step]) } ^
   &done={ > $i 0 }
+}
+
+fn drop-while {|f @iter|
+  set iter = (get-iter $@iter)
+
+  nest-iterator $iter ^
+  &init={
+    while (and (not ($iter[done])) (eq ($f ($iter[curr])) $true)) {
+      nop ($iter[step])
+    }
+  } ^
+  &curr={ put ($iter[curr]) } ^
+  &step={ nop ($iter[step]) }
 }
 
 fn rest {|@iter|
@@ -395,7 +501,107 @@ var tests = [lazy.elv
    { interleave (to-iter a b c) (to-iter 1 2 3) }
    { interpose , (range 10 | to-iter ) }
    { unique (to-iter a b b c c c a a a a d) }
-   { unique (to-iter a b b c c c a a a a d) &count=$true }]
+   { unique (to-iter a b b c c c a a a a d) &count=$true }
+   { nums | take-while {|n| < $n 5} }
+   { nums | drop-while {|n| < $n 5} }
+   { nums &stop=12 | partition 3 }]
+
+  [init
+   'The init function means that iterators should "start over" from the beginning.'
+   (test:is-one $true)
+   {
+     var iter = (range 10 | to-iter)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (cycle a b c)
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (iterate $base:inc~ (num 0))
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums)
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (repeatedly { put x })
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (repeat (randint 100))
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (to-iter d e f | prepend [a b c])
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (range 10 | to-iter | take 5)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (cycle a b c | reductions $base:append~ [])
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     use str
+     var iter = (nums &start=(num 65) | each $str:from-codepoints~)
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums | keep {|n| if (base:is-even $n) { put $n }})
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums | filter $base:is-even~)
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums | remove $base:is-even~)
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (map $'+~' (to-iter (range 10)) (to-iter (range 10)))
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (nums &start=10 &step=10 | map-indexed $'*~')
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (range 10 | to-iter | drop 5)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (interleave (to-iter a b c) (to-iter 1 2 3))
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (interpose , (range 10 | to-iter ))
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (unique (to-iter a b b c c c a a a a d))
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (unique (to-iter a b b c c c a a a a d) &count=$true)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (nums | take-while {|n| < $n 5})
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums | drop-while {|n| < $n 5})
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums &stop=12 | partition 3)
+     eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }]
 
   '# Generators'
   [to-iter
@@ -546,6 +752,59 @@ var tests = [lazy.elv
    { unique (to-iter a) | blast }
    (test:is-each [a (num 1)])
    { unique (to-iter a) &count=$true | blast }]
+
+  [take-while
+   'Returns elements so long as `(f x)` returns $true.'
+   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4))
+   { nums | take-while {|n| < $n 5} | blast}]
+
+  [drop-while
+   'Drops elements until `(f x)` returns false.'
+   (test:is-each (num 5) (num 6) (num 7) (num 8) (num 9))
+   { nums | drop-while {|n| < $n 5} | take 5 | blast }]
+
+  [partition
+   "partitions an iterator into lists of size n."
+   (test:is-each [(num 0) (num 1) (num 2)] ^
+                 [(num 3) (num 4) (num 5)] ^
+                 [(num 6) (num 7) (num 8)] ^
+                 [(num 9) (num 10) (num 11)])
+   { nums &stop=12 | partition 3 | blast }
+
+   "Drops items which don't complete the specified list size."
+   { nums &stop=14 | partition 3 | blast }
+
+   'Specify `&step=n` to specify a "starting point" for each partition.'
+   (test:is-each [(num 0) (num 1) (num 2)] [(num 5) (num 6) (num 7)])
+   { nums &stop=12 | partition 3 &step=5 | blast }
+
+   "`&step` can be < than the partition size."
+   (test:is-each [(num 0) (num 1)] [(num 1) (num 2)] [(num 2) (num 3)])
+   { nums &stop=4 | partition 2 &step=1 | blast }
+
+   "When there are not enough items to fill the last partition, a pad can be supplied."
+   (test:is-each [(num 0) (num 1) (num 2)] ^
+                 [(num 3) (num 4) (num 5)] ^
+                 [(num 6) (num 7) (num 8)] ^
+                 [(num 9) (num 10) (num 11)] ^
+                 [(num 12) (num 13) a])
+   { nums &stop=14 | partition 3 &pad=[a] | blast }
+
+   "The size of the pad may exceed what is used."
+   (test:is-each [(num 0) (num 1) (num 2)] ^
+                 [(num 3) (num 4) (num 5)] ^
+                 [(num 6) (num 7) (num 8)] ^
+                 [(num 9) (num 10) (num 11)] ^
+                 [(num 12) a b])
+   { nums &stop=13 | partition 3 &pad=[a b] | blast }
+
+   "...or not."
+   (test:is-each [(num 0) (num 1) (num 2)] ^
+                 [(num 3) (num 4) (num 5)] ^
+                 [(num 6) (num 7) (num 8)] ^
+                 [(num 9) (num 10) (num 11)] ^
+                 [(num 12)])
+   { nums &stop=13 | partition 3 &pad=[] | blast }]
 
   '# consumers'
   [blast
