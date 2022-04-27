@@ -334,6 +334,28 @@ fn partition {|n @iter &step=$nil &pad=$nil|
   &done={ eq $buffer $nil }
 }
 
+fn take-nth {|n @iter|
+  set iter = (get-iter $@iter)
+  var x
+
+  var next = {
+    var i = $n
+    while (and (not ($iter[done])) (> $i 0)) {
+      nop ($iter[step])
+      set i = (base:dec $i)
+    }
+
+    if (== $i (num 0)) {
+      put ($iter[curr])
+    }
+  }
+
+  nest-iterator $iter ^
+  &init={ set @x = ($iter[curr]) } ^
+  &curr={ put $@x } ^
+  &step={ set @x = ($next) }
+}
+
 fn remove {|f @iter|
   filter (fun:complement $f) (get-iter $@iter)
 }
@@ -809,6 +831,21 @@ var tests = [lazy.elv
                  [(num 9) (num 10) (num 11)] ^
                  [(num 12)])
    { nums &stop=13 | partition 3 &pad=[] | blast }]
+
+  [partition-all
+   'Convenience function for `partition` which supplies `&pad=[]`.'
+   "Use when you don't want everything in the resultset."
+   (test:is-each [(num 0) (num 1) (num 2)] ^
+                 [(num 3) (num 4) (num 5)] ^
+                 [(num 6) (num 7) (num 8)] ^
+                 [(num 9) (num 10) (num 11)] ^
+                 [(num 12)])
+   { nums &stop=13 | partition-all 3 | blast }]
+
+  [take-nth
+   'Returns the nth element from the given iterator.'
+   (test:is-each (range 50 | fun:take-nth 5))
+   { nums &stop=50 | take-nth 5 | blast }]
 
   '# consumers'
   [blast

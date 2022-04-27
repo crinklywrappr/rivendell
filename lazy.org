@@ -385,6 +385,28 @@ Reads the iterator from the pipe, if missing from the input.
     &step={ set buffer done = ($next-if $buffer $done) } ^
     &done={ eq $buffer $nil }
   }
+
+  fn take-nth {|n @iter|
+    set iter = (get-iter $@iter)
+    var x
+
+    var next = {
+      var i = $n
+      while (and (not ($iter[done])) (> $i 0)) {
+        nop ($iter[step])
+        set i = (base:dec $i)
+      }
+
+      if (== $i (num 0)) {
+        put ($iter[curr])
+      }
+    }
+
+    nest-iterator $iter ^
+    &init={ set @x = ($iter[curr]) } ^
+    &curr={ put $@x } ^
+    &step={ set @x = ($next) }
+  }
 #+end_src
 
 
@@ -954,6 +976,10 @@ Relatively simple iterators
                    [(num 12)])
      { nums &stop=13 | partition-all 3 | blast }]
 
+    [take-nth
+     'Returns the nth element from the given iterator.'
+     (test:is-each (range 50 | fun:take-nth 5))
+     { nums &stop=50 | take-nth 5 | blast }]
 
     '# consumers'
     [blast
