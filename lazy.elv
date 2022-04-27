@@ -447,6 +447,10 @@ fn interpose {|sep @iter|
   }
 }
 
+fn partition-all {|n @iter|
+  partition $n (get-iter $@iter) &pad=[]
+}
+
 fn blast {|@iter|
   set iter = (get-iter $@iter)
   nop ($iter[init])

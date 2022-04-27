@@ -506,6 +506,9 @@ Relatively simple iterators
     }
   }
 
+  fn partition-all {|n @iter|
+    partition $n (get-iter $@iter) &pad=[]
+  }
 #+end_src
 
 
@@ -542,8 +545,6 @@ Relatively simple iterators
   # - iterators
   # replace
   # keep-indexed
-  # partition
-  # partition-all
   # take-nth
   # drop-last
   # butlast
@@ -556,76 +557,6 @@ Relatively simple iterators
   # not-any
 
   # high level iterators
-
-  fn partition [n iter &step=$false &pad=$false]{
-    if (and (> $n 0) (or (not $step) (> $step 0))) {
-      if (and $step (< $step $n)) {
-        iterator [@seed]{
-          if (eq $seed [$false]) {
-            seed = []
-          }
-          @bb = (drop $step $@seed)
-          i = (count $bb)
-          @els = (while (and (not ($iter[exhausted])) (< $i $n)) {
-              i = (base:inc $i)
-              put ($iter[curr])
-              nop ($iter[next])
-            })
-          els = [$@bb $@els]
-          c = (count $els)
-          if (> $c 0) {
-            if (== $c $n) {
-              put $els
-            } elif $pad {
-              put (fun:append $els (take (- $n $c) $pad))
-            }
-          }
-        }
-      } elif (and $step (> $step $n)) {
-        iterator [@_]{
-          i = 0
-          @els = (while (and (not ($iter[exhausted])) (< $i $n)) {
-              i = (base:inc $i)
-              put ($iter[curr])
-              nop ($iter[next])
-            })
-          c = (count $els)
-          if (> $c 0) {
-            if (== $c $n) {
-              put $els
-              while (and (not ($iter[exhausted])) (< $i $step)) {
-                i = (base:inc $i)
-                nop ($iter[next])
-              }
-            } elif $pad {
-              put (fun:append $els (take (- $n $c) $pad))
-            }
-          }
-        }
-      } else {
-        iterator [@_]{
-          i = 0
-          @els = (while (and (not ($iter[exhausted])) (< $i $n)) {
-              i = (base:inc $i)
-              put ($iter[curr])
-              nop ($iter[next])
-            })
-          c = (count $els)
-          if (> $c 0) {
-            if (== $c $n) {
-              put $els
-            } elif $pad {
-              put (fun:append $els (take (- $n $c) $pad))
-            }
-          }
-        }
-      }
-    }
-  }
-
-  fn partition-all [n iter]{
-    partition $n $iter &pad=[]
-  }
 
   fn take-nth [n iter]{
     partition 1 &step=$n $iter | map $explode~ (all)
@@ -1012,6 +943,17 @@ Relatively simple iterators
                    [(num 9) (num 10) (num 11)] ^
                    [(num 12)])
      { nums &stop=13 | partition 3 &pad=[] | blast }]
+
+    [partition-all
+     'Convenience function for `partition` which supplies `&pad=[]`.'
+     "Use when you don't want everything in the resultset."
+     (test:is-each [(num 0) (num 1) (num 2)] ^
+                   [(num 3) (num 4) (num 5)] ^
+                   [(num 6) (num 7) (num 8)] ^
+                   [(num 9) (num 10) (num 11)] ^
+                   [(num 12)])
+     { nums &stop=13 | partition-all 3 | blast }]
+
 
     '# consumers'
     [blast
