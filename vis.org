@@ -1,0 +1,161 @@
+-*-org-mode-*-
+#+TITLE: vis
+#+AUTHOR: Daniel Fitzpatrick
+#+OPTIONS: toc:t
+
+* about
+
+Hosts visualization functions.
+
+#+begin_src elvish :tangle ./vis.elv
+  use re
+  use str s
+  use math m
+  use dev/rivendell/base b
+  use dev/rivendell/fun f
+  use dev/rivendell/rune r
+  use dev/rivendell/test t
+#+end_src
+
+
+* sparky (sparkline)
+
+#+begin_src elvish :tangle ./vis.elv
+  fn sparky {|@args &min=$false &max=$false|
+    set @args = (b:check-pipe $args)
+    var ref = [▁ ▂ ▃ ▄ ▅ ▆ ▇ █]
+
+    var min = (or $min (m:min $@args))
+    var max = (or $max (m:max $@args))
+    var sz = (/ (- $max $min) (b:dec (count $ref)))
+
+    if (or (== $min $max) (b:is-zero $sz)) {
+      repeat (b:dec (count $args)) ' ' | s:join ''
+      return
+    }
+
+    var @sparks = (each {|a|
+        if (<= $a $min) {
+          put ' '
+        } elif (>= $a $max) {
+          put █
+        } else {
+          var idx = (m:trunc (/ (- $a $min) $sz))
+          put $ref[$idx]
+        }
+    } $args)
+
+    s:join '' $sparks
+  }
+#+end_src
+
+
+
+* barky (histogram)
+
+it's like a bar chart on it's side haha.
+
+#+begin_src elvish :tangle ./vis.elv
+  fn barky {
+    |@args &formatter=$r:lpad~ ^
+     &pad-char=' ' &bar-char=█ ^
+     &max-cols=(num 80)
+     &desc-pct=(num 0.2) ^
+     &min=$nil &max=$nil|
+
+    if (not (< 0 $desc-pct 1)) {
+      put "invalid description size"
+      return
+    }
+
+    var cols = (m:min $max-cols (tput cols))
+    var desc-width = (
+      ,* $desc-pct $cols ^
+      | b:dec (one) ^
+      | m:trunc (one) ^
+      | m:max 1 (one) ^
+      | exact-num (one))
+
+    set min = (or $min (each $b:second~ $args | m:min (all)))
+    set max = (or $max (each $b:second~ $args | m:max (all)))
+    set @args = (
+      each (f:destruct {|k v|
+          put [(r:trunc $desc-width $k | $formatter $desc-width (one) &char=$pad-char) $v]
+      }) $args)
+
+    var bar-width = (- $cols $desc-width 1)
+    var unitsz = (/ $bar-width (- $max $min))
+
+    each (f:destruct {|k v|
+        if (< $v $min) {
+          echo $k
+        } elif (> $v $max) {
+          var bar = (repeat $bar-width $bar-char | s:join '')
+          put $k $bar | s:join ' ' | echo (all)
+        } else {
+          var n = (exact-num (m:trunc (* (- $v $min 1) $unitsz)))
+          var bar = (repeat $n $bar-char | s:join '')
+          put $k $bar | s:join ' ' | echo (all)
+        }
+    }) $args
+  }
+#+end_src
+
+
+* tests
+
+#+begin_src text :tangle ./vis.elv
+  var tests = [vis.elv
+    'Hosts functions to help with visualization'
+    [sparky
+     'Produces a sparkline from input'
+     'increasing sparkline'
+     (t:is-one ' ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇█')
+     { range 20 | sparky }
+  
+     'decreasing sparkline'
+     (t:is-one '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
+     { range 20 | f:reverse | sparky }
+  
+     'min=max sparkline'
+     (t:is-one '                   ')
+     { range 20 | sparky &max=0 }
+     { repeat 20 0 | sparky }
+  
+     'mostly max sparkline'
+     (t:is-one ' ███████████████████')
+     { range 20 | sparky &max=1 }
+  
+     'window sparkline'
+     (t:is-one '      ▁▂▃▃▄▅▅▆▇█████')
+     { range 20 | sparky &min=5 &max=15 }
+  
+     'shuffled sparkline'
+     (t:is-something)
+     { range 20 | f:shuffle | sparky }]
+
+    [barky
+     'Produces histograms.  Has lots of options.'
+     'Charting the first 11 prime numbers.'
+     (t:is-each ^
+       "    0=2 ██" ^
+       "    1=3 ████" ^
+       "    2=5 █████████" ^
+       "    3=7 █████████████" ^
+       "   4=11 ███████████████████████" ^
+       "   5=13 ███████████████████████████" ^
+       "   6=17 █████████████████████████████████████" ^
+       "   7=19 █████████████████████████████████████████" ^
+       "   8=23 ███████████████████████████████████████████████████" ^
+       "   9=29 █████████████████████████████████████████████████████████████████" ^
+       "  10=31 █████████████████████████████████████████████████████████████████████")
+     {
+       use algo
+       use lazy
+       algo:primes ^
+       | lazy:map-indexed {|k v| put [{$k}={$v} $v]} ^
+       | lazy:take 11 ^
+       | lazy:blast ^
+       | barky (all) &desc-pct=(num 0.1) &min=(num 0)
+     }]]
+#+end_src

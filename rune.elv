@@ -52,7 +52,7 @@ fn trunc {|n s|
 }
 
 fn lpad {|n s &char=' '|
-  var l = (- $n (wcswidth $s))
+  var l = (- $n (wcswidth $s) | exact-num (one))
   if (> $l 0) {
     var pad = (repeat $l $char | str:join '')
     put {$pad}{$s}
@@ -62,7 +62,7 @@ fn lpad {|n s &char=' '|
 }
 
 fn rpad {|n s &char=' '|
-  var l = (- $n (wcswidth $s))
+  var l = (- $n (wcswidth $s) | exact-num (one))
   if (> $l 0) {
     var pad = (repeat $l $char | str:join '')
     put {$s}{$pad}
@@ -72,9 +72,9 @@ fn rpad {|n s &char=' '|
 }
 
 fn center {|n s &char=' '|
-  var l = (- $n (wcswidth $s))
+  var l = (- $n (wcswidth $s) | exact-num (one))
   if (> $l 0) {
-    var front = (math:trunc (/ $l 2))
+    var front = (/ $l 2 | math:trunc (one) | exact-num (one))
     var rear = (- $l $front)
     set front = (repeat $front $char | str:join '')
     set rear = (repeat $rear $char | str:join '')

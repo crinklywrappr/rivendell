@@ -4,6 +4,7 @@ use ./fun
 use ./lazy
 use ./rune
 use ./algo
+use ./vis
 
 fn gendoc {
   var err = ?(mkdir doc)
@@ -14,4 +15,5 @@ fn gendoc {
   test:test $lazy:tests | test:md (all) > doc/lazy.md
   test:test $rune:tests | test:md (all) > doc/rune.md
   test:test $algo:tests | test:md (all) > doc/algo.md
+  test:test $vis:tests | test:md (all) > doc/vis.md
 }
