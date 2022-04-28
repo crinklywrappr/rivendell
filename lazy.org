@@ -407,6 +407,30 @@ Reads the iterator from the pipe, if missing from the input.
     &curr={ put $@x } ^
     &step={ set @x = ($next) }
   }
+
+  fn drop-last {|n @iter|
+    set iter = (get-iter $@iter)
+    var buffer
+
+    nest-iterator $iter ^
+    &init={
+      set buffer = []
+      var i = $n
+      while (and (not ($iter[done])) (> $i 0)) {
+        set buffer = (base:append $buffer ($iter[curr]))
+        nop ($iter[step])
+        set i = (base:dec $i)
+      }
+    } ^
+    &curr={
+      put $buffer[0]
+      set buffer = (base:append $buffer ($iter[curr]))
+    } ^
+    &step={
+      set buffer = (base:rest $buffer)
+      nop ($iter[step])
+    }
+  }
 #+end_src
 
 
@@ -470,30 +494,6 @@ Relatively simple iterators
     } ^
     &curr={ put ($iter[curr]) } ^
     &step={ nop ($iter[step]) }
-  }
-
-  fn drop-last {|n @iter|
-    set iter = (get-iter $@iter)
-    var buffer
-
-    nest-iterator $iter ^
-    &init={
-      set buffer = []
-      var i = $n
-      while (and (not ($iter[done])) (> $i 0)) {
-        set buffer = (base:append $buffer ($iter[curr]))
-        nop ($iter[step])
-        set i = (base:dec $i)
-      }
-    } ^
-    &curr={
-      put $buffer[0]
-      set buffer = (base:append $buffer ($iter[curr]))
-    } ^
-    &step={
-      set buffer = (base:rest $buffer)
-      nop ($iter[step])
-    }
   }
 
   fn butlast {|@iter|

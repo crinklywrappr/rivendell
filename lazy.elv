@@ -356,6 +356,30 @@ fn take-nth {|n @iter|
   &step={ set @x = ($next) }
 }
 
+fn drop-last {|n @iter|
+  set iter = (get-iter $@iter)
+  var buffer
+
+  nest-iterator $iter ^
+  &init={
+    set buffer = []
+    var i = $n
+    while (and (not ($iter[done])) (> $i 0)) {
+      set buffer = (base:append $buffer ($iter[curr]))
+      nop ($iter[step])
+      set i = (base:dec $i)
+    }
+  } ^
+  &curr={
+    put $buffer[0]
+    set buffer = (base:append $buffer ($iter[curr]))
+  } ^
+  &step={
+    set buffer = (base:rest $buffer)
+    nop ($iter[step])
+  }
+}
+
 fn remove {|f @iter|
   filter (fun:complement $f) (get-iter $@iter)
 }
@@ -411,30 +435,6 @@ fn drop-while {|f @iter|
   } ^
   &curr={ put ($iter[curr]) } ^
   &step={ nop ($iter[step]) }
-}
-
-fn drop-last {|n @iter|
-  set iter = (get-iter $@iter)
-  var buffer
-
-  nest-iterator $iter ^
-  &init={
-    set buffer = []
-    var i = $n
-    while (and (not ($iter[done])) (> $i 0)) {
-      set buffer = (base:append $buffer ($iter[curr]))
-      nop ($iter[step])
-      set i = (base:dec $i)
-    }
-  } ^
-  &curr={
-    put $buffer[0]
-    set buffer = (base:append $buffer ($iter[curr]))
-  } ^
-  &step={
-    set buffer = (base:rest $buffer)
-    nop ($iter[step])
-  }
 }
 
 fn butlast {|@iter|
