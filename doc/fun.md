@@ -73,7 +73,7 @@
 72. [pivot](#pivot)
 ***
 ## testing-status
-213 tests passed out of 213
+216 tests passed out of 216
 
 100% of tests are passing
 
@@ -107,6 +107,9 @@ put [1 2 3] [4 5 6] [7 8 9] | concat
 Returns the first element
 ```elvish
 first a b c
+put a b c | first
+```
+```elvish
 ▶ a
 ```
 ***
@@ -115,6 +118,9 @@ first a b c
 Returns the second element
 ```elvish
 second a b c
+put a b c | second
+```
+```elvish
 ▶ b
 ```
 ***
@@ -123,6 +129,9 @@ second a b c
 Returns the last element
 ```elvish
 end a b c
+put a b c | end
+```
+```elvish
 ▶ c
 ```
 ***
@@ -197,8 +206,9 @@ rand-sample 0 (range 10)
 MATCHES EXPECTATIONS: `[nothing]`
 ```elvish
 rand-sample 0.5 (range 10)
-▶ 1
-▶ 5
+▶ 3
+▶ 7
+▶ 9
 ```
 ```elvish
 rand-sample 1 (range 10)
@@ -222,47 +232,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
-▶ 0
-▶ 9
-▶ 3
-▶ 6
+▶ 5
+▶ 1
+▶ 4
 ▶ 8
+▶ 6
 ```
 ```elvish
 range 10 | sample 5
-▶ 7
+▶ 1
 ▶ 8
 ▶ 2
-▶ 4
-▶ 3
+▶ 9
+▶ 6
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
-▶ 8
 ▶ 0
-▶ 7
 ▶ 3
-▶ 5
 ▶ 6
-▶ 2
-▶ 9
 ▶ 4
+▶ 9
 ▶ 1
+▶ 8
+▶ 7
+▶ 2
+▶ 5
 ```
 ```elvish
 range 10 | shuffle
-▶ 4
-▶ 3
+▶ 9
+▶ 6
+▶ 8
 ▶ 1
 ▶ 7
-▶ 2
-▶ 8
-▶ 0
-▶ 9
 ▶ 5
-▶ 6
+▶ 2
+▶ 3
+▶ 0
+▶ 4
 ```
  
 # Set functions
@@ -666,19 +676,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc0005346c0>
+▶ <closure 0xc0001ef140>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.001266254s
+▶ 1.000721538s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
-▶ 310.188µs
 ▶ 100
+▶ 257.219µs
 ```
 ***
 ## repeatedly
@@ -686,16 +696,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 98
-▶ 590
-▶ 228
-▶ 38
-▶ 39
-▶ 293
-▶ 823
-▶ 408
-▶ 895
-▶ 752
+▶ 933
+▶ 100
+▶ 30
+▶ 314
+▶ 680
+▶ 621
+▶ 816
+▶ 115
+▶ 197
+▶ 542
 ```
  
 # Reduce & company

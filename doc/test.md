@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { } { }
-▶ [&name=foo &f=<closure 0xc000408b40> &pred=<closure 0xc000408e40> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000f43680> &pred=<closure 0xc000f43740> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc00073d080> &pred=<closure 0xc00073d8c0> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc001440900> &pred=<closure 0xc0014409c0> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0006ae000> &pred=<closure 0xc0006ae300> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc001498840> &pred=<closure 0xc001498900> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0005b6600> &pred=<closure 0xc0005b75c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc00111da40> &pred=<closure 0xc00111db00> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion

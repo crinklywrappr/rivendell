@@ -5,6 +5,7 @@
 - [test.elv](doc/test.md)
 - [base.elv](doc/base.md)
 - [fun.elv](doc/fun.md)
+- [lazy.elv](doc/lazy.md)
 
 Command-line users are recommended to use `glow`.
 
