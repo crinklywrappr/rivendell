@@ -380,6 +380,34 @@ fn drop-last {|n @iter|
   }
 }
 
+fn keep-indexed {|f @iter &pred=(fun:complement $base:is-nil~)|
+  set iter = (get-iter $@iter)
+  var i x
+
+  var next = {
+    while (not ($iter[done])) {
+      var @curr = ($iter[curr])
+      var @res = ($f $i $@curr)
+      nop ($iter[step])
+      set i = (base:inc $i)
+      if (not-eq $res []) {
+        if ($pred $@res) {
+          put $@res
+          break
+        }
+      }
+    }
+  }
+
+  nest-iterator $iter ^
+  &init={
+    set i = 0
+    set @x = ($next)
+  } ^
+  &curr={ put $@x } ^
+  &step={ set @x = ($next) }
+}
+
 fn remove {|f @iter|
   filter (fun:complement $f) (get-iter $@iter)
 }
@@ -522,6 +550,35 @@ fn blast {|@iter|
   }
 }
 
+fn first {|@iter|
+  set iter = (get-iter $@iter)
+  nop ($iter[init])
+  if (not ($iter[done])) {
+    put ($iter[curr])
+  }
+}
+
+fn second {|@iter|
+  rest (get-iter $@iter) | first
+}
+
+fn nth {|n @iter|
+  drop  (base:dec $n) (get-iter $@iter) | first
+}
+
+fn some {|f @iter|
+  keep $f (get-iter $@iter) | first
+}
+
+fn first-pred {|f @iter|
+  filter $f (get-iter $@iter) | first
+}
+
+fn every {|f @iter|
+  var @res = (first-pred (fun:complement $f) (get-iter $@iter))
+  eq $res []
+}
+
 fn assert-iterator {
   |&fixtures=[&] &store=[&]|
   test:assert iterator {|@reality|
@@ -574,7 +631,8 @@ var tests = [lazy.elv
    { nums &stop=13 | partition-all 3 }
    { nums &stop=50 | take-nth 5 }
    { nums &stop=10 | drop-last 5 }
-   { nums &stop=5 | butlast }]
+   { nums &stop=5 | butlast }
+   { to-iter a b c d e f g | keep-indexed {|i x| put [$i $x]} &pred=(fun:comp $base:first~ $base:is-odd~) }]
 
   [init
    'The init function means that iterators should "start over" from the beginning.'
@@ -686,6 +744,11 @@ var tests = [lazy.elv
    }
    {
      var iter = (nums &stop=5 | butlast)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var pred = (fun:comp $base:first~ $base:is-odd~)
+     var iter = (to-iter a b c d e f g | keep-indexed {|i x| put [$i $x]} &pred=$pred)
      eq (blast $iter | fun:listify) (blast $iter | fun:listify)
    }]
 
@@ -917,8 +980,60 @@ var tests = [lazy.elv
    (test:is-each (range 4))
    { nums &stop=5 | butlast | blast }]
 
+  [keep-indexed
+   'Returns all non-empty & non-nil results of `(f index item)`.'
+   (test:is-each b d f)
+   { to-iter a b c d e f g | keep-indexed {|i x| if (base:is-odd $i) { put $x } else { put $nil }} | blast }
+
+   'And supply your own predicate.'
+   (test:is-each [(num 1) b] [(num 3) d] [(num 5) f])
+   { to-iter a b c d e f g | keep-indexed {|i x| put [$i $x]} &pred=(fun:comp $base:first~ $base:is-odd~) | blast }]
+
   '# consumers'
   [blast
    'Simplest consumer.  "Blasts" the iterator output to the terminal.'
    (test:is-each (range 10))
-   { range 10 | to-iter | blast }]]
+   { range 10 | to-iter | blast }]
+
+  [first
+   'Returns the first element from an iterator.'
+   (test:is-one (num 0))
+   { nums | first }]
+
+  [second
+   'Returns the second element from an iterator.'
+   (test:is-one (num 1))
+   { nums | second }]
+
+  [nth
+   'Returns the nth element from an iterator'
+   (test:is-one (num 24))
+   { nums | nth 25 }]
+
+  [some
+   'Returns the first truthy value from `(f x)`.'
+   (test:is-one $true)
+   { nums &stop=20 | some {|i| < $i 50} }
+   (test:is-one $false)
+   { nums &stop=20 | some {|i| > $i 50} }
+   (test:is-one (num 0))
+   { nums &stop=20 | some {|i| if (< $i 50) { put $i } } }
+   'Might return nothing, if nothing fits.'
+   (test:is-nothing)
+   { nums &stop=20 | some {|i| if (> $i 50) { put $i } } }]
+
+  [first-pred
+   'Like filter but returns the first value.'
+   (test:is-one (num 0))
+   { nums &stop=20 | first-pred {|i| < $i 50} }
+   (test:is-one (num 51))
+   { nums | first-pred {|i| > $i 50} }
+   (test:is-nothing)
+   { nums &stop=20 | first-pred {|i| > $i 50} }]
+
+  [every
+   'Returns `$true` if every element satisfies the predicate.  `$false` otherwise.'
+   (test:is-one $true)
+   { nums &stop=20 | every {|i| < $i 50} }
+   (test:is-one $false)
+   { nums | every {|i| < $i 50} }]]
