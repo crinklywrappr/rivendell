@@ -11,6 +11,7 @@ Not for users.  This is for devs to generate project documentation.
   use ./base
   use ./fun
   use ./lazy
+  use ./rune
 
   fn gendoc {
     var err = ?(mkdir doc)
@@ -19,5 +20,6 @@ Not for users.  This is for devs to generate project documentation.
     test:test $base:tests | test:md (all) > doc/base.md
     test:test $fun:tests | test:md (all) > doc/fun.md
     test:test $lazy:tests | test:md (all) > doc/lazy.md
+    test:test $rune:tests | test:md (all) > doc/rune.md
   }
 #+end_src

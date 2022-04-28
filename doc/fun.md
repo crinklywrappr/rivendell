@@ -208,9 +208,11 @@ MATCHES EXPECTATIONS: `[nothing]`
 rand-sample 0.5 (range 10)
 ▶ 0
 ▶ 1
-▶ 2
 ▶ 3
+▶ 4
+▶ 5
 ▶ 8
+▶ 9
 ```
 ```elvish
 rand-sample 1 (range 10)
@@ -234,47 +236,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
-▶ 3
-▶ 8
+▶ 2
+▶ 6
+▶ 7
 ▶ 1
 ▶ 4
-▶ 6
 ```
 ```elvish
 range 10 | sample 5
-▶ 6
 ▶ 7
+▶ 8
+▶ 4
 ▶ 9
-▶ 5
-▶ 3
+▶ 2
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
-▶ 4
 ▶ 1
-▶ 8
-▶ 7
-▶ 0
 ▶ 9
+▶ 7
+▶ 4
 ▶ 5
 ▶ 3
-▶ 2
+▶ 8
 ▶ 6
+▶ 0
+▶ 2
 ```
 ```elvish
 range 10 | shuffle
 ▶ 8
-▶ 0
-▶ 7
-▶ 4
-▶ 2
-▶ 5
-▶ 6
-▶ 1
-▶ 9
 ▶ 3
+▶ 5
+▶ 1
+▶ 7
+▶ 6
+▶ 2
+▶ 9
+▶ 4
+▶ 0
 ```
  
 # Set functions
@@ -678,19 +680,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc0004f66c0>
+▶ <closure 0xc000801200>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.001078648s
+▶ 1.000960309s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 301.692µs
+▶ 335.449µs
 ```
 ***
 ## repeatedly
@@ -698,16 +700,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 67
-▶ 390
-▶ 654
-▶ 728
-▶ 896
-▶ 480
-▶ 841
-▶ 845
-▶ 76
-▶ 190
+▶ 16
+▶ 323
+▶ 393
+▶ 536
+▶ 186
+▶ 163
+▶ 142
+▶ 255
+▶ 280
+▶ 735
 ```
  
 # Reduce & company

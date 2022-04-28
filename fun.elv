@@ -164,6 +164,30 @@ fn reduce {|f @arr|
   put $acc
 }
 
+fn reduce-while {|pred f @arr|
+  set @arr = (base:check-pipe $arr)
+  var acc = $arr[0]
+  for b $arr[1..] {
+    if ($pred $acc $b) {
+      set acc = ($f $acc $b)
+    } else {
+      break
+    }
+  }
+  put $acc
+}
+
+fn reduce-when {|pred f @arr|
+  set @arr = (base:check-pipe $arr)
+  var acc = $arr[0]
+  for b $arr[1..] {
+    if ($pred $acc $b) {
+      set acc = ($f $acc $b)
+    }
+  }
+  put $acc
+}
+
 fn reduce-kv {|f @arr &idx=0|
   set @arr = (base:check-pipe $arr)
   var acc = $arr[0]
