@@ -47,12 +47,7 @@ fn call-predicate {
 }
 
 fn assert {
-  |expect predicate &fixtures=[&] &store=[&] &name=assert
-   &docstring='base-level assertion.  avoid unless you need a predicate'
-   &arglist=[[expect anything 'a function name (str), or the expected value']
-             [predicate fn 'single-arity. might have optional fixtures & store']
-             [fixtures list 'immutable list']
-             [store list 'list which tests can persist changes to']]|
+  |expect predicate &fixtures=[&] &store=[&] &name=assert|
   make-assertion $name {
     |test-fn &store=[&]|
 
@@ -81,8 +76,8 @@ fn assert {
     var bool @messages = (call-predicate $predicate $@reality &fixtures=$fixtures &store=$new-store)
 
     put [&bool=$bool &expect=$expect &reality=$res
-         &test=(str:trim $test-fn[body] ' ') &messages=$messages
-         &store=$new-store]
+      &test=(str:trim $test-fn[body] ' ') &messages=$messages
+    &store=$new-store]
   } $predicate &fixtures=$fixtures &store=$store
 }
 
