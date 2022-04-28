@@ -413,6 +413,46 @@ fn drop-while {|f @iter|
   &step={ nop ($iter[step]) }
 }
 
+fn drop-last {|n @iter|
+  set iter = (get-iter $@iter)
+  var buffer
+
+  nest-iterator $iter ^
+  &init={
+    set buffer = []
+    var i = $n
+    while (and (not ($iter[done])) (> $i 0)) {
+      set buffer = (base:append $buffer ($iter[curr]))
+      nop ($iter[step])
+      set i = (base:dec $i)
+    }
+  } ^
+  &curr={
+    put $buffer[0]
+    set buffer = (base:append $buffer ($iter[curr]))
+  } ^
+  &step={
+    set buffer = (base:rest $buffer)
+    nop ($iter[step])
+  }
+}
+
+fn butlast {|@iter|
+  set iter = (get-iter $@iter)
+  var x
+
+  nest-iterator $iter ^
+  &init={
+    set x = ($iter[curr])
+    nop ($iter[step])
+  } ^
+  &curr={
+    put $x
+    set x = ($iter[curr])
+  } ^
+  &step={ nop ($iter[step]) }
+}
+
 fn rest {|@iter|
   drop 1 (get-iter $@iter)
 }
@@ -530,7 +570,11 @@ var tests = [lazy.elv
    { unique (to-iter a b b c c c a a a a d) &count=$true }
    { nums | take-while {|n| < $n 5} }
    { nums | drop-while {|n| < $n 5} }
-   { nums &stop=12 | partition 3 }]
+   { nums &stop=12 | partition 3 }
+   { nums &stop=13 | partition-all 3 }
+   { nums &stop=50 | take-nth 5 }
+   { nums &stop=10 | drop-last 5 }
+   { nums &stop=5 | butlast }]
 
   [init
    'The init function means that iterators should "start over" from the beginning.'
@@ -627,6 +671,22 @@ var tests = [lazy.elv
    {
      var iter = (nums &stop=12 | partition 3)
      eq (take 10 $iter | blast | fun:listify) (take 10 $iter | blast | fun:listify)
+   }
+   {
+     var iter = (nums &stop=13 | partition-all 3)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (nums &stop=50 | take-nth 5)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (nums &stop=10 | drop-last 5)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
+   }
+   {
+     var iter = (nums &stop=5 | butlast)
+     eq (blast $iter | fun:listify) (blast $iter | fun:listify)
    }]
 
   '# Generators'
@@ -846,6 +906,16 @@ var tests = [lazy.elv
    'Returns the nth element from the given iterator.'
    (test:is-each (range 50 | fun:take-nth 5))
    { nums &stop=50 | take-nth 5 | blast }]
+
+  [drop-last
+   'Drops the last `n` elements from an iterator.'
+   (test:is-each (range 5))
+   { nums &stop=10 | drop-last 5 | blast }]
+
+  [butlast
+   'Drops the last element from an iterator'
+   (test:is-each (range 4))
+   { nums &stop=5 | butlast | blast }]
 
   '# consumers'
   [blast
