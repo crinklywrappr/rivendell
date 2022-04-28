@@ -64,11 +64,11 @@ Iterators have five zero-arity functions:
 `inf-iterator` & `nest-iterator` are convenience wrappers around `make-iterator`.
 ```elvish
 make-iterator
-▶ [&curr=<closure 0xc000af2f00> &step=<closure 0xc000af3500> &done=<closure 0xc000af3980> &init=<closure 0xc000af2e40>]
+▶ [&curr=<closure 0xc00055b5c0> &step=<closure 0xc00055b740> &done=<closure 0xc00055b8c0> &init=<closure 0xc00055b440>]
 ```
 ```elvish
 make-iterator &init={ } &curr={ } &step={ } &done={ }
-▶ [&curr=<closure 0xc0009a2180> &step=<closure 0xc0009a2240> &done=<closure 0xc0009a2300> &init=<closure 0xc0009a20c0>]
+▶ [&curr=<closure 0xc0001e4600> &step=<closure 0xc0001e4780> &done=<closure 0xc0001e4840> &init=<closure 0xc0001e4540>]
 ```
 ***
 ## is-iterator
@@ -78,115 +78,115 @@ Simple predicate for iterators.  Runs `done` to be sure it returns a bool.
 All of the iterators satisfy this predicate.
 ```elvish
 range 10 | to-iter
-▶ [&curr=<closure 0xc000801b00> &step=<closure 0xc000801bc0> &done=<closure 0xc000801c80> &init=<closure 0xc000801a40>]
+▶ [&curr=<closure 0xc00023e000> &step=<closure 0xc00023e180> &done=<closure 0xc00023e240> &init=<closure 0xc0004c3ec0>]
 ```
 ```elvish
 cycle a b c
-▶ [&curr=<closure 0xc0004a6300> &step=<closure 0xc0004a63c0> &done=<closure 0xc0004a6480> &init=<closure 0xc0004a6240>]
+▶ [&curr=<closure 0xc0004deb40> &step=<closure 0xc0004dec00> &done=<closure 0xc0004decc0> &init=<closure 0xc0004dea80>]
 ```
 ```elvish
 iterate $base:inc~ (num 0)
-▶ [&curr=<closure 0xc0004a69c0> &step=<closure 0xc0004a6a80> &done=<closure 0xc0004a6b40> &init=<closure 0xc0004a6900>]
+▶ [&curr=<closure 0xc00023eb40> &step=<closure 0xc00023ec00> &done=<closure 0xc00023ecc0> &init=<closure 0xc00023e9c0>]
 ```
 ```elvish
 nums
-▶ [&curr=<closure 0xc0005c9ec0> &step=<closure 0xc0005e2000> &done=<closure 0xc0005e2300> &init=<closure 0xc0005c9e00>]
+▶ [&curr=<closure 0xc0004ed500> &step=<closure 0xc0004ed5c0> &done=<closure 0xc0004ed8c0> &init=<closure 0xc0004ed440>]
 ```
 ```elvish
 repeatedly { randint 100 }
-▶ [&curr=<closure 0xc0005e2cc0> &step=<closure 0xc000af3ec0> &done=<closure 0xc0005e2d80> &init=<closure 0xc000af3b00>]
+▶ [&curr=<closure 0xc0004edb00> &step=<closure 0xc00055bec0> &done=<closure 0xc0004edc80> &init=<closure 0xc00055bbc0>]
 ```
 ```elvish
 repeat (randint 100)
-▶ [&curr=<closure 0xc0009a3440> &step=<closure 0xc000af3ec0> &done=<closure 0xc0009a3500> &init=<closure 0xc000af3b00>]
+▶ [&curr=<closure 0xc0004ede00> &step=<closure 0xc00055bec0> &done=<closure 0xc0017a8000> &init=<closure 0xc00055bbc0>]
 ```
 ```elvish
 to-iter d e f | prepend [a b c]
-▶ [&curr=<closure 0xc0009a3bc0> &step=<closure 0xc0009a3c80> &done=<closure 0xc0010cc9c0> &init=<closure 0xc0009a3d40>]
+▶ [&curr=<closure 0xc000296840> &step=<closure 0xc000296900> &done=<closure 0xc000296a80> &init=<closure 0xc0002969c0>]
 ```
 ```elvish
 range 10 | to-iter | take 5
-▶ [&curr=<closure 0xc0005cf080> &step=<closure 0xc0005cf200> &done=<closure 0xc0005cf440> &init=<closure 0xc0005cf380>]
+▶ [&curr=<closure 0xc0017a86c0> &step=<closure 0xc0017a8780> &done=<closure 0xc0017a89c0> &init=<closure 0xc0017a8900>]
 ```
 ```elvish
 cycle a b c | reductions $base:append~ []
-▶ [&curr=<closure 0xc0006eaa80> &step=<closure 0xc0006eab40> &done=<closure 0xc0006eacc0> &init=<closure 0xc0006eac00>]
+▶ [&curr=<closure 0xc0004a2e40> &step=<closure 0xc0004a2f00> &done=<closure 0xc0004a3140> &init=<closure 0xc0004a2fc0>]
 ```
 ```elvish
 use str; nums &start=(num 65) | each $str:from-codepoints~
-▶ [&curr=<closure 0xc0010ccf00> &step=<closure 0xc0010ccfc0> &done=<closure 0xc0010cd140> &init=<closure 0xc0010cd080>]
+▶ [&curr=<closure 0xc000350180> &step=<closure 0xc000350240> &done=<closure 0xc000350600> &init=<closure 0xc000350300>]
 ```
 ```elvish
 nums | keep {|n| if (base:is-even $n) { put $n }}
-▶ [&curr=<closure 0xc000984fc0> &step=<closure 0xc000985080> &done=<closure 0xc000985200> &init=<closure 0xc000985140>]
+▶ [&curr=<closure 0xc000358000> &step=<closure 0xc000358180> &done=<closure 0xc000358300> &init=<closure 0xc000358240>]
 ```
 ```elvish
 nums | filter $base:is-even~
-▶ [&curr=<closure 0xc0010cd980> &step=<closure 0xc0010cda40> &done=<closure 0xc0010cdbc0> &init=<closure 0xc0010cdb00>]
+▶ [&curr=<closure 0xc000358cc0> &step=<closure 0xc000358d80> &done=<closure 0xc000358f00> &init=<closure 0xc000358e40>]
 ```
 ```elvish
 nums | remove $base:is-even~
-▶ [&curr=<closure 0xc0011f4e40> &step=<closure 0xc0011f4f00> &done=<closure 0xc0011f5080> &init=<closure 0xc0011f4fc0>]
+▶ [&curr=<closure 0xc000359800> &step=<closure 0xc0003598c0> &done=<closure 0xc000359a40> &init=<closure 0xc000359980>]
 ```
 ```elvish
 map $'+~' (to-iter (range 10)) (to-iter (range 10))
-▶ [&curr=<closure 0xc00042b5c0> &step=<closure 0xc00042b680> &done=<closure 0xc00042b740> &init=<closure 0xc00042b500>]
+▶ [&curr=<closure 0xc000308d80> &step=<closure 0xc000308e40> &done=<closure 0xc000308f00> &init=<closure 0xc000308cc0>]
 ```
 ```elvish
 nums &start=10 &step=10 | map-indexed $'*~'
-▶ [&curr=<closure 0xc000490600> &step=<closure 0xc0004906c0> &done=<closure 0xc000490780> &init=<closure 0xc000490540>]
+▶ [&curr=<closure 0xc000479140> &step=<closure 0xc000479380> &done=<closure 0xc000479440> &init=<closure 0xc000478fc0>]
 ```
 ```elvish
 range 10 | to-iter | drop 5
-▶ [&curr=<closure 0xc0011f5b00> &step=<closure 0xc0011f5bc0> &done=<closure 0xc0011f5e00> &init=<closure 0xc0011f5d40>]
+▶ [&curr=<closure 0xc000317680> &step=<closure 0xc000317740> &done=<closure 0xc000317980> &init=<closure 0xc0003178c0>]
 ```
 ```elvish
 interleave (to-iter a b c) (to-iter 1 2 3)
-▶ [&curr=<closure 0xc0004adec0> &step=<closure 0xc00077b8c0> &done=<closure 0xc000b69980> &init=<closure 0xc0004ade00>]
+▶ [&curr=<closure 0xc000336b40> &step=<closure 0xc000336c00> &done=<closure 0xc000336cc0> &init=<closure 0xc0003369c0>]
 ```
 ```elvish
 interpose , (range 10 | to-iter )
-▶ [&curr=<closure 0xc0004d6240> &step=<closure 0xc0004d6300> &done=<closure 0xc0004d6540> &init=<closure 0xc0004d6480>]
+▶ [&curr=<closure 0xc000309980> &step=<closure 0xc000309a40> &done=<closure 0xc000309c80> &init=<closure 0xc000309bc0>]
 ```
 ```elvish
 unique (to-iter a b b c c c a a a a d)
-▶ [&curr=<closure 0xc00047e240> &step=<closure 0xc00047e300> &done=<closure 0xc00047e480> &init=<closure 0xc00047e3c0>]
+▶ [&curr=<closure 0xc000881b00> &step=<closure 0xc000881bc0> &done=<closure 0xc000881d40> &init=<closure 0xc000881c80>]
 ```
 ```elvish
 unique (to-iter a b b c c c a a a a d) &count=$true
-▶ [&curr=<closure 0xc0004d6cc0> &step=<closure 0xc0004d6d80> &done=<closure 0xc0004d6e40> &init=<closure 0xc0004d6c00>]
+▶ [&curr=<closure 0xc001176480> &step=<closure 0xc001176540> &done=<closure 0xc001176600> &init=<closure 0xc0011763c0>]
 ```
 ```elvish
 nums | take-while {|n| < $n 5}
-▶ [&curr=<closure 0xc00047f380> &step=<closure 0xc00047f440> &done=<closure 0xc00047f740> &init=<closure 0xc00047f5c0>]
+▶ [&curr=<closure 0xc0009e2f00> &step=<closure 0xc0006a8000> &done=<closure 0xc0006a8480> &init=<closure 0xc0006a8300>]
 ```
 ```elvish
 nums | drop-while {|n| < $n 5}
-▶ [&curr=<closure 0xc000498600> &step=<closure 0xc0004986c0> &done=<closure 0xc000498840> &init=<closure 0xc000498780>]
+▶ [&curr=<closure 0xc001177800> &step=<closure 0xc0011778c0> &done=<closure 0xc0002da0c0> &init=<closure 0xc001177c80>]
 ```
 ```elvish
 nums &stop=12 | partition 3
-▶ [&curr=<closure 0xc00063d5c0> &step=<closure 0xc000962000> &done=<closure 0xc0009620c0> &init=<closure 0xc000489ec0>]
+▶ [&curr=<closure 0xc0002f0c00> &step=<closure 0xc0002f0d80> &done=<closure 0xc0002f0e40> &init=<closure 0xc0002f0b40>]
 ```
 ```elvish
 nums &stop=13 | partition-all 3
-▶ [&curr=<closure 0xc000962b40> &step=<closure 0xc000962d80> &done=<closure 0xc000962fc0> &init=<closure 0xc000962a80>]
+▶ [&curr=<closure 0xc0006a9d40> &step=<closure 0xc0002da180> &done=<closure 0xc0002da240> &init=<closure 0xc0006a9500>]
 ```
 ```elvish
 nums &stop=50 | take-nth 5
-▶ [&curr=<closure 0xc00127cc00> &step=<closure 0xc00127ccc0> &done=<closure 0xc00127ce40> &init=<closure 0xc00127cd80>]
+▶ [&curr=<closure 0xc0013f4d80> &step=<closure 0xc0013f4e40> &done=<closure 0xc0013f5080> &init=<closure 0xc0013f4f00>]
 ```
 ```elvish
 nums &stop=10 | drop-last 5
-▶ [&curr=<closure 0xc0004cca80> &step=<closure 0xc0004ccb40> &done=<closure 0xc0004cccc0> &init=<closure 0xc0004ccc00>]
+▶ [&curr=<closure 0xc000546900> &step=<closure 0xc0005469c0> &done=<closure 0xc000546b40> &init=<closure 0xc000546a80>]
 ```
 ```elvish
 nums &stop=5 | butlast
-▶ [&curr=<closure 0xc0004ccfc0> &step=<closure 0xc0004cd080> &done=<closure 0xc0004cd200> &init=<closure 0xc0004cd140>]
+▶ [&curr=<closure 0xc0005475c0> &step=<closure 0xc000547800> &done=<closure 0xc000547a40> &init=<closure 0xc000547980>]
 ```
 ```elvish
 to-iter a b c d e f g | keep-indexed {|i x| put [$i $x]} &pred=(fun:comp $base:first~ $base:is-odd~)
-▶ [&curr=<closure 0xc00127d680> &step=<closure 0xc00127d740> &done=<closure 0xc00127d8c0> &init=<closure 0xc00127d800>]
+▶ [&curr=<closure 0xc0005c4180> &step=<closure 0xc0005c43c0> &done=<closure 0xc0005c4600> &init=<closure 0xc0005c4540>]
 ```
 ***
 ## init
@@ -426,11 +426,11 @@ MATCHES EXPECTATIONS: `[nothing]`
 Takes a zero-arity function and calls it infinitely.
 ```elvish
 repeatedly { randint 100 } | take 5 | blast
-▶ 4
-▶ 13
-▶ 93
-▶ 24
-▶ 40
+▶ 31
+▶ 0
+▶ 57
+▶ 80
+▶ 2
 ```
 ***
 ## repeat

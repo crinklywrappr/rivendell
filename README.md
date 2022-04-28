@@ -7,6 +7,7 @@
 - [fun.elv](doc/fun.md)
 - [lazy.elv](doc/lazy.md)
 - [rune.elv](doc/rune.md)
+- [algo.elv](doc/algo.md)
 
 Command-line users are recommended to use `glow`.
 
