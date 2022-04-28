@@ -10,6 +10,7 @@ Not for users.  This is for devs to generate project documentation.
   use ./test
   use ./base
   use ./fun
+  use ./lazy
 
   fn gendoc {
     var err = ?(mkdir doc)
