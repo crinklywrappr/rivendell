@@ -1,131 +1,171 @@
-use str
 use re
-use ./base
-use ./fun
-use ./num
+use str
+use math
+use dev/rivendell/base
+use dev/rivendell/test
+use dev/rivendell/fun
 
-fn substr [from to s]{
-  c = (count $s)
-  w = (wcswidth $s)
-  if (== $c $w) {
-    put {$s}[{$from}:{$to}]
+fn is-unicode {|s|
+  != (count $s) (wcswidth $s)
+}
+
+fn is-ascii {|s|
+  == (count $s) (wcswidth $s)
+}
+
+fn substr {|s &from=(num 0) &to=$nil|
+  var c = (all $s | count)
+  set to = (or $to $c)
+  if (is-ascii $s) {
+    put {$s}[{$from}..{$to}]
   } else {
+    if (< $from 0) {
+      set from = (+ $c $from)
+    }
     if (< $to 0) {
-      to = (+ $w $to)
+      set to = (+ $c $to)
     }
-    drop $from $s | take $to | joins ''
+    set to = (- $to $from)
+    drop $from $s | take $to | str:join ''
   }
 }
 
-fn truncatestr [n s]{
-  w = (wcswidth $s)
-
-  if (or (<= $w $n) (<= $w 3)) {
+fn trunc {|n s|
+  if (<= (wcswidth $s) $n) {
     put $s
-  } elif (<= $n 3) {
-    put ...
+  } elif (>= (wcswidth $s[0]) $n) {
+    put …
+  } elif (is-ascii $s) {
+    put {$s[..{$n}]}'…'
   } else {
-    ts = (if (== $w (count $s)) {
-      put $s[:(- $n 3)]
-    } else {
-      take $n $s | joins ''
-    })
-    put {$ts}...
+    set n = (base:dec $n)
+    set s = (
+      fun:reduce-while ^
+      {|a b|
+        <= (+ $a[0] (wcswidth $b)) $n
+      } ^
+      {|a b|
+        put [(+ $a[0] (wcswidth $b)) {$a[1]}{$b}]
+      } [0 ''] (all $s))
+    put {$s[1]}'…'
   }
 }
 
-fn lpad [n s &char=" "]{
-  l = (- $n (wcswidth $s))
+fn lpad {|n s &char=' '|
+  var l = (- $n (wcswidth $s) | exact-num (one))
   if (> $l 0) {
-    pad = (repeat $l $char | joins '')
-    put $pad $s | joins ''
+    var pad = (repeat $l $char | str:join '')
+    put {$pad}{$s}
   } else {
     put $s
   }
 }
 
-fn rpad [n s &char=" "]{
-  l = (- $n (wcswidth $s))
+fn rpad {|n s &char=' '|
+  var l = (- $n (wcswidth $s) | exact-num (one))
   if (> $l 0) {
-    pad = (repeat $l $char | joins '')
-    put $s $pad | joins ''
+    var pad = (repeat $l $char | str:join '')
+    put {$s}{$pad}
   } else {
     put $s
   }
 }
 
-fn center [n s &char=" "]{
-  l = (- $n (wcswidth $s))
+fn center {|n s &char=' '|
+  var l = (- $n (wcswidth $s) | exact-num (one))
   if (> $l 0) {
-    front = (num:truncatef64 (/ $l 2))
-    back = (- $l $front)
-    put (repeat $front $char) $s (repeat $back $char) | joins ''
+    var front = (/ $l 2 | math:trunc (one) | exact-num (one))
+    var rear = (- $l $front)
+    set front = (repeat $front $char | str:join '')
+    set rear = (repeat $rear $char | str:join '')
+    put {$front}{$s}{$rear}
   } else {
     put $s
   }
 }
 
-fn fast-cell-format [cols s]{
-  explode $s | 
-    fun:partition-all $cols (all) |
-    each (fun:comp (fun:partial $rpad~ $cols) (fun:partial $joins~ ''))
-}
+var tests = [rune.elv
+  'Hosts functions which operate on text.  Tries to behave sanely with variable-width characters.'
+  [is-unicode/is-ascii
+   'predicates which tell you whether or not the string uses wide characters.'
+   (test:assert-one $true)
+   { is-ascii hello }
+   { is-unicode '你好，世界' }
+   (test:assert-one $false)
+   { is-unicode hello }
+   { is-ascii '你好，世界' }]
 
-fn cell-format [cols s &brk=[' ' '-']]{
+  [substr
+   'produces a substring.'
+   'returns the string with no options.'
+   (test:assert-one hello)
+   { substr hello }
+   (test:assert-one '你好，世界')
+   { substr '你好，世界' }
 
-  words = (fun:reduce [a b]{
-      @a = (each [x]{
-          @words = (re:split {$b}+ $x)
-          if (> (count $words) 1) {
-            for w (base:butlast $words) {
-              put {$w}{$b}
-            }
-            put $words[-1]
-          } else {
-            explode $words
-          }
-        } $a)
-      put $a
-    } [$s] $@brk)
+   'starts at 0 when `from` is not provided'
+   (test:assert-one he)
+   { substr hello &to=2 }
+   (test:assert-one '你好')
+   { substr '你好，世界' &to=2 }
 
-  fold-fn = [a b]{
-      b-stripped = (str:trim-right $b ' ')
+   'goes to the end of the string when `to` is not provided.'
+   (test:assert-one ello)
+   { substr hello &from=1 }
+   (test:assert-one '好，世界')
+   { substr '你好，世界' &from=1 }
 
-      # switched to stateful var for perf
-      chars = (fun:reduce [a b]{ + $a (wcswidth $b) } 0 (explode $a[-1]))
+   'feel free to mix them.'
+   (test:assert-one el)
+   { substr hello &from=1 &to=3 }
+   (test:assert-one '好，')
+   { substr '你好，世界' &from=1 &to=3 }
 
-      word newline = (if (<= (+ $chars (wcswidth $b)) $cols) {
-          put $b $false
-        } elif (<= (+ $chars (wcswidth $b-stripped)) $cols) {
-          put $b-stripped $false
-        } else {
-          put $b $true
-        })
+   'negative indices can be provided.'
+   (test:assert-one ello)
+   { substr hello &from=-4 }
+   (test:assert-one '好，世界')
+   { substr '你好，世界' &from=-4 }
 
-      @parts = (explode $word |
-          fun:partition-all $cols (all) |
-          each (fun:partial $joins~ '') |
-          fun:take-while (fun:partial $not-eq~ ' ') (all))
+   'positive and negative indices can be mixed.'
+   (test:assert-one ell)
+   { substr hello &from=1 &to=-1}
+   (test:assert-one '好，世')
+   { substr '你好，世界' &from=1 &to=-1 }]
 
-      if (base:is-one (count $parts)) {
-        if $newline {
-          a = (base:append $a '')
-        }
-        a = (fun:update $a -1 [a b]{ joins '' [$a $b] } $parts[0])
-      } else {
-        for p $parts {
-          if (not-eq $a[-1] '') {
-            a = (base:append $a '')
-          }
-          if (not-eq $p ' ') {
-            a = (fun:update $a -1 [a b]{ joins '' [$a $b] } $p)
-          }
-        }
-      }
+  [trunc
+   'truncates a string to a specified screen width.'
+   (test:assert-one 'hello, wo…')
+   { trunc 9 'hello, world' }
+   (test:assert-one '你好，世…')
+   { trunc 9 '你好，世界' }
+   'a sufficient width will return the whole string.'
+   (test:assert-one 'hello, world')
+   { trunc 12 'hello, world' }
+   (test:assert-one '你好，世界')
+   { trunc 10 '你好，世界' }
+   'a width too small will just return the elipsis.'
+   (test:assert-one …)
+   { trunc 1 'hello, world' }
+   { trunc 2 '你好，世界' }]
 
-      put $a
-    }
+  [lpad/rpad
+   'Pads a string to width `n`.  By default, the padding char is a space.'
+   'Only works if the padding char is single-width.'
+   (test:assert-one 'hello..........')
+   { rpad 15 hello &char=. }
+   (test:assert-one '你好，世界.....')
+   { rpad 15 '你好，世界' &char=. }
+   (test:assert-one '..........hello')
+   { lpad 15 hello &char=. }
+   (test:assert-one '.....你好，世界')
+   { lpad 15 '你好，世界' &char=. }]
 
-  fun:reduce $fold-fn [''] $@words | 
-      each (fun:partial $rpad~ $cols) (all)
-}
+  [center
+   'Pads a string on both sides, to width `n`.  If the string is odd width, offsets to the left.'
+   'By default, the padding char is a space.'
+   'Only works if the padding char is single-width.'
+   (test:assert-one '..你好，世界...')
+   { center 15 '你好，世界' &char=. }
+   (test:assert-one '.....world.....')
+   { center 15 'world' &char=. }]]
