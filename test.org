@@ -132,7 +132,7 @@ These are fundamental assertions & simple examples for how to write an
 assertion.
 
 #+begin_src elvish :tangle ./test.elv
-  fn is-all {
+  fn assert-all {
     |@assertions &fixtures=[&] &store=[&]|
     assert all {|@reality &fixtures=[&] &store=[&]|
       var msg b
@@ -149,10 +149,10 @@ assertion.
         set messages = []
       }
       put $bool $@messages
-    } &name=is-all &fixtures=$fixtures &store=$store
+    } &name=assert-all &fixtures=$fixtures &store=$store
   }
 
-  fn is-any {
+  fn assert-any {
     |@assertions &fixtures=[&] &store=[&]|
     assert any {|@reality &fixtures=[&] &store=[&]|
       var b
@@ -164,49 +164,49 @@ assertion.
         }
       }
       put $bool
-    } &name=is-any &fixtures=$fixtures &store=$store
+    } &name=assert-any &fixtures=$fixtures &store=$store
   }
 
-  fn is-one {
+  fn assert-one {
     |expectation &fixtures=[&] &store=[&]|
     assert $expectation {|@reality|
       and (== (count $reality) 1) ^
           (eq $expectation $@reality)
-    } &name=is-one &fixtures=$fixtures &store=$store
+    } &name=assert-one &fixtures=$fixtures &store=$store
   }
 
-  fn is-each {
+  fn assert-each {
     |@expectation &fixtures=[&] &store=[&]|
     assert $expectation {|@reality|
       eq $expectation $reality
-    } &name=is-each &fixtures=$fixtures &store=$store
+    } &name=assert-each &fixtures=$fixtures &store=$store
   }
 
-  fn is-count {
+  fn assert-count {
     |c &fixtures=[&] &store=[&]|
     assert 'count='$c {|@reality|
       eq (num $c) (count $reality)
-    } &name=is-count &fixtures=$fixtures &store=$store
+    } &name=assert-count &fixtures=$fixtures &store=$store
   }
 
-  fn is-error {
+  fn assert-error {
     |&fixtures=[&] &store=[&]|
     assert exception {|@reality|
       and (== (count $reality) 1) ^
           (not-eq $@reality $ok) ^
           (eq (kind-of $@reality) exception)
-    } &name=is-error &fixtures=$fixtures &store=$store
+    } &name=assert-error &fixtures=$fixtures &store=$store
   }
 
-  fn is-ok {
+  fn assert-ok {
     |&fixtures=[&] &store=[&]|
     assert ok {|@reality|
       or (eq $reality []) ^
          (not-eq (kind-of $reality[0]) exception)
-    } &name=is-ok &fixtures=$fixtures &store=$store
+    } &name=assert-ok &fixtures=$fixtures &store=$store
   }
 
-  fn is-something {
+  fn assert-something {
     |&fixtures=[&] &store=[&]|
     assert something {|@reality|
       var @kinds = (each $kind-of~ $reality)
@@ -216,70 +216,70 @@ assertion.
               (has-value $kinds fn) ^
               (has-value $kinds num) ^
               (has-value $kinds string))
-    } &name=is-something &fixtures=$fixtures &store=$store
+    } &name=assert-something &fixtures=$fixtures &store=$store
   }
 
-  fn is-nothing {
+  fn assert-nothing {
     |&fixtures=[&] &store=[&]|
     assert nothing {|@reality|
       eq $reality []
-    } &name=is-nothing &fixtures=$fixtures &store=$store
+    } &name=assert-nothing &fixtures=$fixtures &store=$store
   }
 
-  fn is-list {
+  fn assert-list {
     |&fixtures=[&] &store=[&]|
     assert list {|@reality|
       and (== (count $reality) 1) ^
           (eq (kind-of $@reality) list)
-    } &name=is-list &fixtures=$fixtures &store=$store
+    } &name=assert-list &fixtures=$fixtures &store=$store
   }
 
-  fn is-map {
+  fn assert-map {
     |&fixtures=[&] &store=[&]|
     assert map {|@reality|
       and (== (count $reality) 1) ^
           (eq (kind-of $@reality) map)
-    } &name=is-map &fixtures=$fixtures &store=$store
+    } &name=assert-map &fixtures=$fixtures &store=$store
   }
 
-  fn is-coll {
+  fn assert-coll {
     |&fixtures=[&] &store=[&]|
     assert collection {|@reality|
       and (== (count $reality) 1) ^
           (has-value [list map] (kind-of $@reality))
-    } &name=is-coll &fixtures=$fixtures &store=$store
+    } &name=assert-coll &fixtures=$fixtures &store=$store
   }
 
-  fn is-fn {
+  fn assert-fn {
     |&fixtures=[&] &store=[&]|
     assert fn {|@reality|
       and (== (count $reality) 1) ^
           (eq (kind-of $@reality) fn)
-    } &name=is-fn &fixtures=$fixtures &store=$store
+    } &name=assert-fn &fixtures=$fixtures &store=$store
   }
 
-  fn is-num {
+  fn assert-num {
     |&fixtures=[&] &store=[&]|
     assert number {|@reality|
       and (== (count $reality) 1) ^
           (eq (kind-of $@reality) number)
-    } &name=is-num &fixtures=$fixtures &store=$store
+    } &name=assert-num &fixtures=$fixtures &store=$store
   }
 
-  fn is-string {
+  fn assert-string {
     |&fixtures=[&] &store=[&]|
     assert string {|@reality|
       and (== (count $reality) 1) ^
           (eq (kind-of $@reality) string)
-    } &name=is-string &fixtures=$fixtures &store=$store
+    } &name=assert-string &fixtures=$fixtures &store=$store
   }
 
-  fn is-nil {
+  fn assert-nil {
     |&fixtures=[&] &store=[&]|
     assert nil {|@reality|
       and (== (count $reality) 1) ^
           (eq (kind-of $@reality) nil)
-    } &name=is-nil &fixtures=$fixtures &store=$store
+    } &name=assert-nil &fixtures=$fixtures &store=$store
   }
 #+end_src
 
@@ -656,7 +656,7 @@ Tests for this module
   var tests = [Test.elv
     [make-assertion
      'lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.'
-     (is-map)
+     (assert-map)
      { make-assertion foo { } { } }
      { make-assertion foo { } { } &fixtures=[&foo=bar]}
      { make-assertion foo { } { } &store=[&frob=nitz]}
@@ -664,7 +664,7 @@ Tests for this module
 
     [is-assertion
      '`is-assertion` is a predicate for assertions.'
-     (is-one $true)
+     (assert-one $true)
      { make-assertion foo { put foo } { } | is-assertion (one) }
 
      '`is-assertion` only cares about the presence of `f` key'
@@ -672,119 +672,119 @@ Tests for this module
 
      'All other assertions satisfy the predicate'
      { assert foo { put $true } | is-assertion (one) }
-     { is-all | is-assertion (one) }
-     { is-any | is-assertion (one) }
-     { is-one foo | is-assertion (one) }
-     { is-each foo bar | is-assertion (one) }
-     { is-count 3 | is-assertion (one) }
-     { is-error | is-assertion (one) }
-     { is-something | is-assertion (one) }
-     { is-nothing | is-assertion (one) }
-     { is-list | is-assertion (one) }
-     { is-map | is-assertion (one) }
-     { is-coll | is-assertion (one) }
-     { is-fn | is-assertion (one) }
-     { is-num | is-assertion (one) }
-     { is-string | is-assertion (one) }
-     { is-nil | is-assertion (one) }]
+     { assert-all | is-assertion (one) }
+     { assert-any | is-assertion (one) }
+     { assert-one foo | is-assertion (one) }
+     { assert-each foo bar | is-assertion (one) }
+     { assert-count 3 | is-assertion (one) }
+     { assert-error | is-assertion (one) }
+     { assert-something | is-assertion (one) }
+     { assert-nothing | is-assertion (one) }
+     { assert-list | is-assertion (one) }
+     { assert-map | is-assertion (one) }
+     { assert-coll | is-assertion (one) }
+     { assert-fn | is-assertion (one) }
+     { assert-num | is-assertion (one) }
+     { assert-string | is-assertion (one) }
+     { assert-nil | is-assertion (one) }]
 
     [helpers
      'These functions are useful if you are writing a low-level assertion like `assert`.  Your test function can be one of four forms, and `call-test` will dispatch based on argument-reflection.'
      'The following tests demonstrate that type of dispatch.'
-     (is-one something)
+     (assert-one something)
      { call-test {|| put something} }
      { call-test {|store| put $store[x]} &store=[&x=something] }
      { call-test {|fixtures| put $fixtures[x]} &fixtures=[&x=something] }
 
-     (is-each some thing)
+     (assert-each some thing)
      { call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=some] &store=[&x=thing] }
 
      '`call-test` expects fixtures before store.  This test errors because the input args are swapped.'
-     (is-error)
+     (assert-error)
      { call-test {|store fixtures| put $fixtures[a]; put $store[b]} &fixtures=[&a=a] &store=[&b=b] }
 
      '`call-predicate` accepts two forms.'
-     (is-one $true)
+     (assert-one $true)
      { call-predicate {|@reality| eq $@reality foo} foo }
      { call-predicate {|@reality &fixtures=[&] &store=[&]|
                          == ($reality[0] $fixtures[x] $store[x]) -1
                       } $compare~ &fixtures=[&x=1] &store=[&x=2] }
 
      'Any other form will error'
-     (is-error)
+     (assert-error)
      { call-predicate {|@reality &store=[&]| eq $@reality foo} foo }
      { call-predicate {|@reality &fixtures=[&]| eq $@reality foo} foo }]
 
     [assert
      'assertions return the boolean result, the expected value, the values emmited from the test, the test body, any messages produced by the assertion, and the store (more on that later)'
-     (is-one [&test='put foo' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
+     (assert-one [&test='put foo' &expect=foo &bool=$true &store=[&] &messages=[] &reality=[foo]])
      { (assert foo {|@x| eq $@x foo})[f] { put foo } }
 
      'The expected value can be the exact value you want, or it can be a description of what you are testing for'
-     (is-one string-with-foo)
+     (assert-one string-with-foo)
      { (assert string-with-foo {|@x| str:contains $@x foo})[f] { put '--foo--' } | put (all)[expect] }
 
      'if your predicate takes a store, then the predicate must emit the store first'
      (assert [&foo=bar] {|@result &store=[&] &fixtures=[&]| eq $store[foo] bar})
      {|store| assoc $store foo bar; put foo }
 
-     (is-error)
+     (assert-error)
      { test [mytest [subheader {|store| put foo} ]] }
 
      'The `store` must be returned as a map'
-     { test [mytest [subheader (is-one bar) {|store| put foo; put bar} ]] }]
+     { test [mytest [subheader (assert-one bar) {|store| put foo; put bar} ]] }]
 
     [high-level-assertions
      'general use-cases for each assertion'
-     (is-one $true)
-     { (is-one foo)[f] { put foo } | put (one)[bool] }
-     { (is-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
-     { (is-count 3)[f] { put a b c } | put (one)[bool] }
-     { (is-error)[f] { fail foobar } | put (one)[bool] }
-     { (is-ok)[f] { put foobar } | put (one)[bool] }
-     { (is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
-     { (is-nothing)[f] { } | put (one)[bool] }
-     { (is-list)[f] { put [a b c] } | put (one)[bool] }
-     { (is-map)[f] { put [&foo=bar] } | put (one)[bool] }
-     { (is-fn)[f] { put { } } | put (one)[bool] }
-     { (is-string)[f] { put foo } | put (one)[bool] }
-     { (is-nil)[f] { put $nil } | put (one)[bool] }
+     (assert-one $true)
+     { (assert-one foo)[f] { put foo } | put (one)[bool] }
+     { (assert-each foo bar)[f] { put foo; put bar } | put (one)[bool] }
+     { (assert-count 3)[f] { put a b c } | put (one)[bool] }
+     { (assert-error)[f] { fail foobar } | put (one)[bool] }
+     { (assert-ok)[f] { put foobar } | put (one)[bool] }
+     { (assert-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool] }
+     { (assert-nothing)[f] { } | put (one)[bool] }
+     { (assert-list)[f] { put [a b c] } | put (one)[bool] }
+     { (assert-map)[f] { put [&foo=bar] } | put (one)[bool] }
+     { (assert-fn)[f] { put { } } | put (one)[bool] }
+     { (assert-string)[f] { put foo } | put (one)[bool] }
+     { (assert-nil)[f] { put $nil } | put (one)[bool] }
 
-     '`is-all/is-any` are high-level assertions which take other assertions.'
-     { (is-all (is-each a b c) (is-count 3))[f] { put a b c } | put (one)[bool] }
-     { (is-any (is-each a b c) (is-count 4))[f] { put a b c } | put (one)[bool] }
+     '`assert-all/assert-any` are high-level assertions which take other assertions.'
+     { (assert-all (assert-each a b c) (assert-count 3))[f] { put a b c } | put (one)[bool] }
+     { (assert-any (assert-each a b c) (assert-count 4))[f] { put a b c } | put (one)[bool] }
 
-     '`is-coll` works on lists and maps'
-     { (is-coll)[f] { put [a b c] } | put (one)[bool] }
-     { (is-coll)[f] { put [&foo=bar] } | put (one)[bool] }
+     '`assert-coll` works on lists and maps'
+     { (assert-coll)[f] { put [a b c] } | put (one)[bool] }
+     { (assert-coll)[f] { put [&foo=bar] } | put (one)[bool] }
 
-     '`is-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.'
-     { (is-num)[f] { num 1 } | put (one)[bool] }
-     { (is-num)[f] { float64 1 } | put (one)[bool] }
+     '`assert-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.'
+     { (assert-num)[f] { num 1 } | put (one)[bool] }
+     { (assert-num)[f] { float64 1 } | put (one)[bool] }
 
-     '`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error'
-     { (is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
+     '`assert-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error'
+     { (assert-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
 
-     (is-one $false)
-     { (is-ok)[f] { fail foobar } | put (one)[bool] }
+     (assert-one $false)
+     { (assert-ok)[f] { fail foobar } | put (one)[bool] }
 
-     'Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance'
-     { (is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }]
+     'Simply returning something is not enough for `assert-something`.  A bunch of `$nil` values will fail, for instance'
+     { (assert-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool] }]
 
     [test-runner-exceptions
      'The test runner emits information suitable for debugging and documentation.  Start by giving it nothing.'
-     (is-error)
+     (assert-error)
      { test $nil }
 
      'It should have told you it expects a list.  Give it a list.'
      { test [] }
 
      'Now it is complaining about a missing header.  Give it a header.'
-     (is-something)
+     (assert-something)
      { test [mytests] }
 
      'Our first victory!  But we have no tests yet.  A test is a function preceded by an assertion.  They are grouped in sub-lists.  First, test all the ways we can get that wrong.'
-     (is-error)
+     (assert-error)
 
      '$nil is not a list'
      { test [mytests $nil] }
@@ -795,19 +795,19 @@ Tests for this module
      'This is missing an assertion'
      { test [mytests ['bad test' { }]] }]
     [working-test-runner
-     (is-something)
+     (assert-something)
      'an arbitrary number of tests can follow an assertion, and text can be added to describe the tests'
      { test [mytests
              [foo-tests
              'All of the assertions the string "foo" satisfies'
-             (is-string)
+             (assert-string)
              { put foo }
 
-             (is-something)
+             (assert-something)
              { put foo}
 
              'Really, text can be added anywhere'
-             (is-one foo)
+             (assert-one foo)
              { put foo }]] }
 
      'Assertions which compose other assertions and predicates are planned.'
@@ -815,7 +815,7 @@ Tests for this module
      'Fixtures can be supplied to tests.  They must be maps set in the assertion.'
      { test [mytests
              [fixture-test
-              (is-one bar &fixtures=[&foo=bar])
+              (assert-one bar &fixtures=[&foo=bar])
               {|fixtures| put $fixtures[foo]}]]}
 
      'Stores can be supplied to tests, too.  These must be maps, too.  Stores persist changes from test to test and are reset with every assertion.'
@@ -840,14 +840,14 @@ Tests for this module
      'A store can be initialized from an assertion also.'
      { test [mytests
              [store-test
-              (is-one bar &store=[&foo=bar])
+              (assert-one bar &store=[&foo=bar])
               {|store| put $store; put $store[foo]}]]}
 
      'However, when taking a store, the store must be the first element returned, even if no changes are made'
-     (is-error)
+     (assert-error)
      { test [mytests
              [store-test
-              (is-one bar &store=[&foo=bar])
+              (assert-one bar &store=[&foo=bar])
               {|store| put $store[foo]}]]}
     ]]
 #+end_src

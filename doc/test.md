@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { } { }
-▶ [&name=foo &f=<closure 0xc000588780> &pred=<closure 0xc000588840> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc00075a600> &pred=<closure 0xc00075a6c0> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc00050da40> &pred=<closure 0xc00050db00> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000763980> &pred=<closure 0xc000763a40> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc00052cfc0> &pred=<closure 0xc00052d080> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc00075ad80> &pred=<closure 0xc00075ae40> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc0005f2840> &pred=<closure 0xc0005f2900> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc0007529c0> &pred=<closure 0xc000752a80> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
@@ -51,21 +51,21 @@ make-assertion foo { } { } | dissoc (one) fixtures | dissoc (one) store | is-ass
 All other assertions satisfy the predicate
 ```elvish
 assert foo { put $true } | is-assertion (one)
-is-all | is-assertion (one)
-is-any | is-assertion (one)
-is-one foo | is-assertion (one)
-is-each foo bar | is-assertion (one)
-is-count 3 | is-assertion (one)
-is-error | is-assertion (one)
-is-something | is-assertion (one)
-is-nothing | is-assertion (one)
-is-list | is-assertion (one)
-is-map | is-assertion (one)
-is-coll | is-assertion (one)
-is-fn | is-assertion (one)
-is-num | is-assertion (one)
-is-string | is-assertion (one)
-is-nil | is-assertion (one)
+assert-all | is-assertion (one)
+assert-any | is-assertion (one)
+assert-one foo | is-assertion (one)
+assert-each foo bar | is-assertion (one)
+assert-count 3 | is-assertion (one)
+assert-error | is-assertion (one)
+assert-something | is-assertion (one)
+assert-nothing | is-assertion (one)
+assert-list | is-assertion (one)
+assert-map | is-assertion (one)
+assert-coll | is-assertion (one)
+assert-fn | is-assertion (one)
+assert-num | is-assertion (one)
+assert-string | is-assertion (one)
+assert-nil | is-assertion (one)
 ```
 ```elvish
 ▶ $true
@@ -144,7 +144,7 @@ test [mytest [subheader {|store| put foo} ]]
  
 The `store` must be returned as a map
 ```elvish
-test [mytest [subheader (is-one bar) {|store| put foo; put bar} ]]
+test [mytest [subheader (assert-one bar) {|store| put foo; put bar} ]]
 ▶ [&reason=[&content='test  put foo; put bar took store but did not emit store as a map.  response[0]=foo' &type=fail]]
 ```
 ***
@@ -152,63 +152,63 @@ test [mytest [subheader (is-one bar) {|store| put foo; put bar} ]]
  
 general use-cases for each assertion
 ```elvish
-(is-one foo)[f] { put foo } | put (one)[bool]
-(is-each foo bar)[f] { put foo; put bar } | put (one)[bool]
-(is-count 3)[f] { put a b c } | put (one)[bool]
-(is-error)[f] { fail foobar } | put (one)[bool]
-(is-ok)[f] { put foobar } | put (one)[bool]
-(is-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool]
-(is-nothing)[f] { } | put (one)[bool]
-(is-list)[f] { put [a b c] } | put (one)[bool]
-(is-map)[f] { put [&foo=bar] } | put (one)[bool]
-(is-fn)[f] { put { } } | put (one)[bool]
-(is-string)[f] { put foo } | put (one)[bool]
-(is-nil)[f] { put $nil } | put (one)[bool]
+(assert-one foo)[f] { put foo } | put (one)[bool]
+(assert-each foo bar)[f] { put foo; put bar } | put (one)[bool]
+(assert-count 3)[f] { put a b c } | put (one)[bool]
+(assert-error)[f] { fail foobar } | put (one)[bool]
+(assert-ok)[f] { put foobar } | put (one)[bool]
+(assert-something)[f] { put foo; put bar; put [foo bar] } | put (one)[bool]
+(assert-nothing)[f] { } | put (one)[bool]
+(assert-list)[f] { put [a b c] } | put (one)[bool]
+(assert-map)[f] { put [&foo=bar] } | put (one)[bool]
+(assert-fn)[f] { put { } } | put (one)[bool]
+(assert-string)[f] { put foo } | put (one)[bool]
+(assert-nil)[f] { put $nil } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
 ```
  
-`is-all/is-any` are high-level assertions which take other assertions.
+`assert-all/assert-any` are high-level assertions which take other assertions.
 ```elvish
-(is-all (is-each a b c) (is-count 3))[f] { put a b c } | put (one)[bool]
-(is-any (is-each a b c) (is-count 4))[f] { put a b c } | put (one)[bool]
+(assert-all (assert-each a b c) (assert-count 3))[f] { put a b c } | put (one)[bool]
+(assert-any (assert-each a b c) (assert-count 4))[f] { put a b c } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
 ```
  
-`is-coll` works on lists and maps
+`assert-coll` works on lists and maps
 ```elvish
-(is-coll)[f] { put [a b c] } | put (one)[bool]
-(is-coll)[f] { put [&foo=bar] } | put (one)[bool]
+(assert-coll)[f] { put [a b c] } | put (one)[bool]
+(assert-coll)[f] { put [&foo=bar] } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
 ```
  
-`is-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.
+`assert-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.
 ```elvish
-(is-num)[f] { num 1 } | put (one)[bool]
-(is-num)[f] { float64 1 } | put (one)[bool]
+(assert-num)[f] { num 1 } | put (one)[bool]
+(assert-num)[f] { float64 1 } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
 ```
  
-`is-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error
+`assert-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error
 ```elvish
-(is-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool]
+(assert-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool]
 ▶ $true
 ```
 ```elvish
-(is-ok)[f] { fail foobar } | put (one)[bool]
+(assert-ok)[f] { fail foobar } | put (one)[bool]
 ▶ $false
 ```
  
-Simply returning something is not enough for `is-something`.  A bunch of `$nil` values will fail, for instance
+Simply returning something is not enough for `assert-something`.  A bunch of `$nil` values will fail, for instance
 ```elvish
-(is-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool]
+(assert-something)[f] { put $nil; put $nil; put $nil } | put (one)[bool]
 ▶ $false
 ```
 ***
@@ -261,14 +261,14 @@ an arbitrary number of tests can follow an assertion, and text can be added to d
    test [mytests
      [foo-tests
        'All of the assertions the string "foo" satisfies'
-       (is-string)
+       (assert-string)
        { put foo }
        
-       (is-something)
+       (assert-something)
        { put foo}
        
        'Really, text can be added anywhere'
-       (is-one foo)
+       (assert-one foo)
        { put foo }]]
 ▶ break
 ▶ mytests
@@ -288,7 +288,7 @@ Fixtures can be supplied to tests.  They must be maps set in the assertion.
 ```elvish
    test [mytests
      [fixture-test
-       (is-one bar &fixtures=[&foo=bar])
+       (assert-one bar &fixtures=[&foo=bar])
        {|fixtures| put $fixtures[foo]}]]
 ▶ break
 ▶ mytests
@@ -330,7 +330,7 @@ A store can be initialized from an assertion also.
 ```elvish
    test [mytests
      [store-test
-       (is-one bar &store=[&foo=bar])
+       (assert-one bar &store=[&foo=bar])
        {|store| put $store; put $store[foo]}]]
 ▶ break
 ▶ mytests
@@ -344,7 +344,7 @@ However, when taking a store, the store must be the first element returned, even
 ```elvish
    test [mytests
      [store-test
-       (is-one bar &store=[&foo=bar])
+       (assert-one bar &store=[&foo=bar])
        {|store| put $store[foo]}]]
 ▶ [&reason=[&content='test  put $store[foo] took store but did not emit store as a map.  response[0]=bar' &type=fail]]
 ```

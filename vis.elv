@@ -82,34 +82,34 @@ var tests = [vis.elv
   [sparky
    'Produces a sparkline from input'
    'increasing sparkline'
-   (t:is-one ' ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇█')
+   (t:assert-one ' ▁▁▂▂▂▃▃▃▄▄▅▅▅▆▆▆▇▇█')
    { range 20 | sparky }
 
    'decreasing sparkline'
-   (t:is-one '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
+   (t:assert-one '█▇▇▆▆▆▅▅▅▄▄▃▃▃▂▂▂▁▁ ')
    { range 20 | f:reverse | sparky }
 
    'min=max sparkline'
-   (t:is-one '                   ')
+   (t:assert-one '                   ')
    { range 20 | sparky &max=0 }
    { repeat 20 0 | sparky }
 
    'mostly max sparkline'
-   (t:is-one ' ███████████████████')
+   (t:assert-one ' ███████████████████')
    { range 20 | sparky &max=1 }
 
    'window sparkline'
-   (t:is-one '      ▁▂▃▃▄▅▅▆▇█████')
+   (t:assert-one '      ▁▂▃▃▄▅▅▆▇█████')
    { range 20 | sparky &min=5 &max=15 }
 
    'shuffled sparkline'
-   (t:is-something)
+   (t:assert-something)
    { range 20 | f:shuffle | sparky }]
 
   [barky
    'Produces histograms.  Has lots of options.'
    'Charting the first 11 prime numbers.'
-   (t:is-each ^
+   (t:assert-each ^
      "    0=2 ██" ^
      "    1=3 ████" ^
      "    2=5 █████████" ^
@@ -122,8 +122,8 @@ var tests = [vis.elv
      "   9=29 █████████████████████████████████████████████████████████████████" ^
      "  10=31 █████████████████████████████████████████████████████████████████████")
    {
-     use algo
-     use lazy
+     use dev/rivendell/algo
+     use dev/rivendell/lazy
      algo:primes ^
      | lazy:map-indexed {|k v| put [{$k}={$v} $v]} ^
      | lazy:take 11 ^

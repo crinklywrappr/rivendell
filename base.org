@@ -108,73 +108,73 @@ More complicated list operations.
     '# Math functions'
     [is-zero
      'works with text, nums, and floats'
-     (test:is-one $true)
+     (test:assert-one $true)
      { is-zero 0 }
      { is-zero (num 0) }
      { is-zero (float64 0) }
 
-     (test:is-one $false)
+     (test:assert-one $false)
      { is-zero 1 }
      { is-zero (randint 1 100) }
      { is-zero (float64 (randint 1 100)) }]
 
     [is-one
      'works with text, nums, and floats'
-     (test:is-one $true)
+     (test:assert-one $true)
      { is-one 1 }
      { is-one (num 1) }
      { is-one (float64 1) }
 
-     (test:is-one $false)
+     (test:assert-one $false)
      { is-one 0 }
      { is-one (num 0)}
      { is-one (float64 0)}]
 
     [evens
      'only works with strings & nums'
-     (test:is-each $false $true $false $true $false $true $false $true $false $true $false)
+     (test:assert-each $false $true $false $true $false $true $false $true $false $true $false)
      { range -5 6 | each $is-even~ }
      { range -5 6 | each $to-string~ | each $is-even~ }
 
      'fails with floats'
-     (test:is-error)
+     (test:assert-error)
      { is-even 5.0 }]
 
     [odds
      'only works with strings & nums'
-     (test:is-each $true $false $true $false $true $false $true $false $true $false $true)
+     (test:assert-each $true $false $true $false $true $false $true $false $true $false $true)
      { range -5 6 | each $is-odd~ }
      { range -5 6 | each $to-string~ | each $is-odd~ }
 
      'fails with floats'
-     (test:is-error)
+     (test:assert-error)
      { is-odd 5.0 }]
 
     [inc
      'works with text, nums, and floats'
-     (test:is-each (range -4 7))
+     (test:assert-each (range -4 7))
      { range -5 6 | each $inc~ }
 
-     (test:is-each (range -4 7))
+     (test:assert-each (range -4 7))
      { range -5 6 | each $to-string~ | each $inc~ }
 
-     (test:is-each (range -4.0 7))
+     (test:assert-each (range -4.0 7))
      { range -5 6 | each $float64~ | each $inc~ }]
 
     [dec
      'works with text, nums, and floats'
-     (test:is-each (range -6 5))
+     (test:assert-each (range -6 5))
      { range -5 6 | each $dec~ }
 
-     (test:is-each (range -6 5))
+     (test:assert-each (range -6 5))
      { range -5 6 | each $to-string~ | each $dec~ }
 
-     (test:is-each (range -6.0 5))
+     (test:assert-each (range -6.0 5))
      { range -5 6 | each $float64~ | each $dec~ }]
 
     [pos/neg
      'works with text, nums, and floats'
-     (test:is-each $false $true)
+     (test:assert-each $false $true)
      { each $pos~ [-1 1] }
      { each $neg~ [1 -1] }
      { each $pos~ [(num -1) (num 1)] }
@@ -186,7 +186,7 @@ More complicated list operations.
 
     [is-functions
      'predicate functions for types'
-     (test:is-one $true)
+     (test:assert-one $true)
      { is-fn { } }
      { is-map [&] }
      { is-list [] }
@@ -197,7 +197,7 @@ More complicated list operations.
      { is-string 1 }
      { is-string {} }
      'likewise, these look like a number and a function, but they are actually strings'
-     (test:is-one $false)
+     (test:assert-one $false)
      { is-number 1 }
      { is-fn {} }]
 
@@ -205,38 +205,38 @@ More complicated list operations.
 
     [prepend
      'prepends a scalar value to a list'
-     (test:is-one [0 1 2 3])
+     (test:assert-one [0 1 2 3])
      { prepend [2 3] 0 1 }
      { put [2 3] | prepend (all) 0 1 }
      { put 2 3 | prepend [(all)] 0 1 }
 
      'prepend on strings implicitly transforms to list'
-     (test:is-one [h e l l o])
+     (test:assert-one [h e l l o])
      { prepend ello h}]
 
     [append
      'appends a scalar value to a list'
-     (test:is-one [0 1 2 3])
+     (test:assert-one [0 1 2 3])
      { append [0 1] 2 3 }
      { put [0 1] | append (all) 2 3 }
      { put 0 1 | append [(all)] 2 3 }
 
      'append on strings implicitly transforms to list'
-     (test:is-one [h e l l o])
+     (test:assert-one [h e l l o])
      { append hell o}]
 
     [concat2
      'concatenate two lists'
-     (test:is-one [0 1 2 3])
+     (test:assert-one [0 1 2 3])
      { concat2 [0 1] [2 3] }
 
      'concat2 on strings implicitly transforms to list'
-     (test:is-one [h e l l o])
+     (test:assert-one [h e l l o])
      { concat2 he llo }]
 
     [pluck
      'removes the element at a given index from a list.'
-     (test:is-one [0 1 2 3])
+     (test:assert-one [0 1 2 3])
      { pluck [0 1 x 2 3] 2 }
      { put [0 1 x 2 3] | pluck (all) 2 }
      { put 0 1 x 2 3 | pluck [(all)] 2 }
@@ -246,12 +246,12 @@ More complicated list operations.
      { put [0 1 2 3 4] | pluck (all) 4 }
 
      'pluck on strings implicitly transforms to list'
-     (test:is-one [x m e n])
+     (test:assert-one [x m e n])
      { pluck x-men 1 }]
 
     [get
      'retrieves the element at index i in a list'
-     (test:is-one s)
+     (test:assert-one s)
      { get [0 1 s 2 3] 2 }
      { put [0 1 s 2 3] | get (all) 2 }
      { put 0 1 s 2 3 | get [(all)] 2 }
@@ -260,89 +260,89 @@ More complicated list operations.
 
     [first
      'retrieves the first element from a list'
-     (test:is-one 0)
+     (test:assert-one 0)
      { first [0 1 2 3] }
      { put 0 1 2 3 | first [(all)] }
 
      'works on strings, too'
-     (test:is-one h)
+     (test:assert-one h)
      { first "hello" }
      { first hello }]
 
     [ffirst
      'nested `first` on a list'
-     (test:is-one a)
+     (test:assert-one a)
      { ffirst [[a b c] 1 2 3] }
      { put [a b c] 1 2 3 | ffirst [(all)] }]
 
     [second
      'retrieves the second element from a list'
-     (test:is-one 1)
+     (test:assert-one 1)
      { second [0 1 2 3] }
      { put 0 1 2 3 | second [(all)] }
 
      'works on strings, too'
-     (test:is-one e)
+     (test:assert-one e)
      { second "hello" }
      { second hello }]
 
     [rest
      'drops the first element from a list'
-     (test:is-each [1 2 3])
+     (test:assert-each [1 2 3])
      { rest [0 1 2 3] }
      { put 0 1 2 3 | rest [(all)] }
 
      'works on strings without coercing the result to a list'
-     (test:is-one ello)
+     (test:assert-one ello)
      { rest "hello" }
      { rest hello }]
 
     [end
      'retrieves the last element from a list (the end of a list)'
-     (test:is-one 3)
+     (test:assert-one 3)
      { end [0 1 2 3] }
      { put 0 1 2 3 | end [(all)] }
 
      'works on strings, too'
-     (test:is-one o)
+     (test:assert-one o)
      { end "hello" }
      { end hello }]
 
     [butlast
      'drops the last element from a list'
-     (test:is-each [0 1 2])
+     (test:assert-each [0 1 2])
      { butlast [0 1 2 3] }
      { put 0 1 2 3 | butlast [(all)] }
 
      'works on strings without coercing the result to a list'
-     (test:is-one hell)
+     (test:assert-one hell)
      { butlast "hello" }
      { butlast hello }]
 
     [is-empty
      'does whats on the tin'
-     (test:is-one $true)
+     (test:assert-one $true)
      { is-empty [] }
      { is-empty '' }]
 
     [swap
      'Works on maps'
-     (test:is-one [&a=1 &b=2])
+     (test:assert-one [&a=1 &b=2])
      { swap [&a=2 &b=1] a b }
 
      'Works on lists'
-     (test:is-one [a b c])
+     (test:assert-one [a b c])
      { swap [b a c] 0 1 }
 
      'Works on strings'
-     (test:is-one stuff)
+     (test:assert-one stuff)
      {swap tsuff 0 1}]
 
     '# More complicated list operations'
 
     [nth
      'returns the nth item in a list'
-     (test:is-one b)
+     (test:assert-one b)
      { nth [f o o b a r] 3 }
      { put f o o b a r | nth [(all)] 3 }
 
@@ -350,31 +350,31 @@ More complicated list operations.
      { nth foobar 3 }
 
      'It returns nothing if the index is out of range'
-     (test:is-nothing)
+     (test:assert-nothing)
      { nth [f o o b a r] 10 }
 
      'You can optionally specify the `not-found` value'
-     (test:is-one kaboom)
+     (test:assert-one kaboom)
      { nth [$nil $nil $nil] 10 &not-found=kaboom}
 
      'It uses `drop` under the hood, so negative indices just return the 0-index'
-     (test:is-one f)
+     (test:assert-one f)
      { nth [f o o b a r] -10}]
 
 
 
     [check-pipe
      'this is probably the most interesting function here.  it takes input, and if the input is empty, returns whats in the pipe.  Otherwise it returns the input, exploded.'
-     (test:is-each 1 2 3)
+     (test:assert-each 1 2 3)
      { check-pipe [1 2 3] }
      { put 1 2 3 | check-pipe [] }]
 
     [flatten
      'recursive function which basically performs nested explosions on a list, ignoring lists.'
-     (test:is-each (range 1 10 | each $to-string~))
+     (test:assert-each (range 1 10 | each $to-string~))
      { flatten [1 [2 3] [4 [[5 [6] 7]] 8 [] [9]]]}
 
      'anything else is just returned'
-     (test:is-one foobar)
+     (test:assert-one foobar)
      { flatten foobar }]]
 #+end_src

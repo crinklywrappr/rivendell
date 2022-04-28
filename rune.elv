@@ -88,84 +88,84 @@ var tests = [rune.elv
   'Hosts functions which operate on text.  Tries to behave sanely with variable-width characters.'
   [is-unicode/is-ascii
    'predicates which tell you whether or not the string uses wide characters.'
-   (test:is-one $true)
+   (test:assert-one $true)
    { is-ascii hello }
    { is-unicode '你好，世界' }
-   (test:is-one $false)
+   (test:assert-one $false)
    { is-unicode hello }
    { is-ascii '你好，世界' }]
 
   [substr
    'produces a substring.'
    'returns the string with no options.'
-   (test:is-one hello)
+   (test:assert-one hello)
    { substr hello }
-   (test:is-one '你好，世界')
+   (test:assert-one '你好，世界')
    { substr '你好，世界' }
 
    'starts at 0 when `from` is not provided'
-   (test:is-one he)
+   (test:assert-one he)
    { substr hello &to=2 }
-   (test:is-one '你好')
+   (test:assert-one '你好')
    { substr '你好，世界' &to=2 }
 
    'goes to the end of the string when `to` is not provided.'
-   (test:is-one ello)
+   (test:assert-one ello)
    { substr hello &from=1 }
-   (test:is-one '好，世界')
+   (test:assert-one '好，世界')
    { substr '你好，世界' &from=1 }
 
    'feel free to mix them.'
-   (test:is-one el)
+   (test:assert-one el)
    { substr hello &from=1 &to=3 }
-   (test:is-one '好，')
+   (test:assert-one '好，')
    { substr '你好，世界' &from=1 &to=3 }
 
    'negative indices can be provided.'
-   (test:is-one ello)
+   (test:assert-one ello)
    { substr hello &from=-4 }
-   (test:is-one '好，世界')
+   (test:assert-one '好，世界')
    { substr '你好，世界' &from=-4 }
 
    'positive and negative indices can be mixed.'
-   (test:is-one ell)
+   (test:assert-one ell)
    { substr hello &from=1 &to=-1}
-   (test:is-one '好，世')
+   (test:assert-one '好，世')
    { substr '你好，世界' &from=1 &to=-1 }]
 
   [trunc
    'truncates a string to a specified screen width.'
-   (test:is-one 'hello, wo…')
+   (test:assert-one 'hello, wo…')
    { trunc 9 'hello, world' }
-   (test:is-one '你好，世…')
+   (test:assert-one '你好，世…')
    { trunc 9 '你好，世界' }
    'a sufficient width will return the whole string.'
-   (test:is-one 'hello, world')
+   (test:assert-one 'hello, world')
    { trunc 12 'hello, world' }
-   (test:is-one '你好，世界')
+   (test:assert-one '你好，世界')
    { trunc 10 '你好，世界' }
    'a width too small will just return the elipsis.'
-   (test:is-one …)
+   (test:assert-one …)
    { trunc 1 'hello, world' }
    { trunc 2 '你好，世界' }]
 
   [lpad/rpad
    'Pads a string to width `n`.  By default, the padding char is a space.'
    'Only works if the padding char is single-width.'
-   (test:is-one 'hello..........')
+   (test:assert-one 'hello..........')
    { rpad 15 hello &char=. }
-   (test:is-one '你好，世界.....')
+   (test:assert-one '你好，世界.....')
    { rpad 15 '你好，世界' &char=. }
-   (test:is-one '..........hello')
+   (test:assert-one '..........hello')
    { lpad 15 hello &char=. }
-   (test:is-one '.....你好，世界')
+   (test:assert-one '.....你好，世界')
    { lpad 15 '你好，世界' &char=. }]
 
   [center
    'Pads a string on both sides, to width `n`.  If the string is odd width, offsets to the left.'
    'By default, the padding char is a space.'
    'Only works if the padding char is single-width.'
-   (test:is-one '..你好，世界...')
+   (test:assert-one '..你好，世界...')
    { center 15 '你好，世界' &char=. }
-   (test:is-one '.....world.....')
+   (test:assert-one '.....world.....')
    { center 15 'world' &char=. }]]

@@ -4,9 +4,9 @@
 3. [barky](#barky)
 ***
 ## testing-status
-7 tests passed out of 8
+8 tests passed out of 8
 
-87% of tests are passing
+100% of tests are passing
 
  
 Hosts functions to help with visualization
@@ -51,7 +51,7 @@ range 20 | sparky &min=5 &max=15
 shuffled sparkline
 ```elvish
 range 20 | f:shuffle | sparky
-▶ ▂█ ▂▄▇▅▁▆▃▂▃▆▅▄▅▇▁▃▆
+▶ ▄▄▆▃▁▃ ▂▆▂▃▅▂▅▆▇▅▁▇█
 ```
 ***
 ## barky
@@ -59,15 +59,24 @@ range 20 | f:shuffle | sparky
 Produces histograms.  Has lots of options.
  
 Charting the first 11 prime numbers.
-**STATUS: FAILING**
 ```elvish
-   use algo
-   use lazy
+   use dev/rivendell/algo
+   use dev/rivendell/lazy
    algo:primes ^
      | lazy:map-indexed {|k v| put [{$k}={$v} $v]} ^
        | lazy:take 11 ^
          | lazy:blast ^
            | barky (all) &desc-pct=(num 0.1) &min=(num 0)
            
-▶ [&reason=<unknown no such module: algo>]
+▶     0=2 ██
+▶     1=3 ████
+▶     2=5 █████████
+▶     3=7 █████████████
+▶    4=11 ███████████████████████
+▶    5=13 ███████████████████████████
+▶    6=17 █████████████████████████████████████
+▶    7=19 █████████████████████████████████████████
+▶    8=23 ███████████████████████████████████████████████████
+▶    9=29 █████████████████████████████████████████████████████████████████
+▶   10=31 █████████████████████████████████████████████████████████████████████
 ```

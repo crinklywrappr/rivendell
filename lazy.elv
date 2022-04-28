@@ -597,7 +597,7 @@ var tests = [lazy.elv
    '- curr: outputs the next value.'
    '- done: returns a boolean.  `true` if the iterator has been exhusted'
    '`inf-iterator` & `nest-iterator` are convenience wrappers around `make-iterator`.'
-   (test:is-map)
+   (test:assert-map)
    { make-iterator }
    { make-iterator &init={ } &curr={ } &step={ } &done={ } }]
 
@@ -636,7 +636,7 @@ var tests = [lazy.elv
 
   [init
    'The init function means that iterators should "start over" from the beginning.'
-   (test:is-one $true)
+   (test:assert-one $true)
    {
      var iter = (range 10 | to-iter)
      eq (blast $iter | fun:listify) (blast $iter | fun:listify)
@@ -755,166 +755,166 @@ var tests = [lazy.elv
   '# Generators'
   [to-iter
    'Simplest generator.  Transforms an "array" to an iterator.'
-   (test:is-each (range 10))
+   (test:assert-each (range 10))
    { to-iter (range 10) | blast }
    { range 10 | to-iter | blast }]
 
   [cycle
    'cycles an "array" infinitely.'
-   (test:is-each a b c a b c a b c a)
+   (test:assert-each a b c a b c a b c a)
    { cycle a b c | take 10 | blast }
    { put a b c | cycle | take 10 | blast }]
 
   [iterate
    'Returns an "array" of n, f(n), f(f(n)), etc.'
-   (test:is-each (range 10))
+   (test:assert-each (range 10))
    { iterate $base:inc~ (num 0) | take 10 | blast }]
 
   [nums
    'With no options, starts counting up from 0.'
-   (test:is-each (range 10))
+   (test:assert-each (range 10))
    { nums | take 10 | blast }
    'You can tell it to start at a specific value.'
-   (test:is-each (range 10 20))
+   (test:assert-each (range 10 20))
    { nums &start=10 | take 10 | blast }
    'You can specify a step value.'
-   (test:is-each (num 0) (num 2) (num 4) (num 6) (num 8))
+   (test:assert-each (num 0) (num 2) (num 4) (num 6) (num 8))
    { nums &step=2 | take 5 | blast }
    'It can be negative.'
-   (test:is-each (range 0 -10))
+   (test:assert-each (range 0 -10))
    { nums &step=-1 | take 10 | blast }
    'Stop values can also be provided, although they offer little value over `range`.'
-   (test:is-each (range 10))
+   (test:assert-each (range 10))
    { nums &stop=10 | blast }
    '`nums` returns nothing if the inputs make no sense.'
-   (test:is-nothing)
+   (test:assert-nothing)
    { nums &step=-1 &stop=10 | blast }]
 
   [repeatedly
    'Takes a zero-arity function and calls it infinitely.'
-   (test:is-count 5)
+   (test:assert-count 5)
    { repeatedly { randint 100 } | take 5 | blast }]
 
   [repeat
    'Returns `x` infinitely'
-   (test:is-each x x x x x)
+   (test:assert-each x x x x x)
    { repeat x | take 5 | blast }]
 
   '# High-level iterators'
   [prepend
    'Prepends a list to an iterator'
-   (test:is-each a b c d e f)
+   (test:assert-each a b c d e f)
    { to-iter d e f | prepend [a b c] | blast }]
 
   [take
    'Like `builtin:take` but for iterators.'
-   (test:is-each a b c a b c a b c a)
+   (test:assert-each a b c a b c a b c a)
    { cycle a b c | take 10 | blast }
    { put a b c | cycle | take 10 | blast }
    'Exceeding the length of a nested iterator is handled gracefully.'
-   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4))
+   (test:assert-each (num 0) (num 1) (num 2) (num 3) (num 4))
    { range 5 | to-iter | take 20 | blast }]
 
   [drop
    'Like `builtin:drop` but for iterators.'
-   (test:is-each (num 5) (num 6) (num 7) (num 8) (num 9))
+   (test:assert-each (num 5) (num 6) (num 7) (num 8) (num 9))
    { range 10 | to-iter | drop 5 | blast }
    'Dropping more than the nested iterator is handled gracefully.'
-   (test:is-nothing)
+   (test:assert-nothing)
    { range 10 | to-iter | drop 20 | blast }]
 
   [rest
    'Drops the first element from the iterator.'
-   (test:is-each (num 6) (num 7) (num 8) (num 9))
+   (test:assert-each (num 6) (num 7) (num 8) (num 9))
    { range 10 | to-iter | drop 5 | rest | blast }]
 
   [reductions
    'Like fun:reductions, but works with iterators.'
-   (test:is-each [] [a] [a b] [a b c] [a b c a])
+   (test:assert-each [] [a] [a b] [a b c] [a b c a])
    { cycle a b c | reductions $base:append~ [] | take 5 | blast }]
 
   [each
    'Like `builtin:each, but works with iterators`.'
-   (test:is-each A B C)
+   (test:assert-each A B C)
    { use str; nums &start=(num 65) | each $str:from-codepoints~ | take 3 | blast }]
 
   [map
    'Like `each`, but works with multiple iterators.'
-   (test:is-each (num 0) (num 2) (num 4) (num 6) (num 8))
+   (test:assert-each (num 0) (num 2) (num 4) (num 6) (num 8))
    { map $'+~' (to-iter (range 10)) (to-iter (range 10)) | take 5 | blast }
    'Can work like `each`, but you should avoid this because it is less performant.'
-   (test:is-each A B C)
+   (test:assert-each A B C)
    { use str; nums &start=(num 65) | map $str:from-codepoints~ | take 3 | blast }]
 
   [map-indexed
    'Returns a sequence of `(f index element)`.'
-   (test:is-each (num 0) (num 20) (num 60) (num 120) (num 200))
+   (test:assert-each (num 0) (num 20) (num 60) (num 120) (num 200))
    { nums &start=10 &step=10 | map-indexed $'*~' | take 5 | blast }]
 
   [keep
    "Returns result of `(f x)` when it's non-nil & non-empty."
    'Notice how these two results are different depending on where you place the `take`.'
-   (test:is-each (num 0) (num 2) (num 4) (num 6) (num 8))
+   (test:assert-each (num 0) (num 2) (num 4) (num 6) (num 8))
    { nums | take 10 | keep {|n| if (base:is-even $n) { put $n }} | blast }
-   (test:is-each (num 0) (num 2) (num 4) (num 6) (num 8) (num 10) (num 12) (num 14) (num 16) (num 18))
+   (test:assert-each (num 0) (num 2) (num 4) (num 6) (num 8) (num 10) (num 12) (num 14) (num 16) (num 18))
    { nums | keep {|n| if (base:is-even $n) { put $n }} | take 10 | blast }]
 
   [filter
    "Returns `x` when `(f x)` is non-empty & truthy."
-   (test:is-each (num 0) (num 2) (num 4) (num 6) (num 8))
+   (test:assert-each (num 0) (num 2) (num 4) (num 6) (num 8))
    { nums | filter $base:is-even~ | take 5 | blast }]
 
   [remove
    "Returns `x` when `(complement (f x))` is non-empty & truthy."
-   (test:is-each (num 1) (num 3) (num 5) (num 7) (num 9))
+   (test:assert-each (num 1) (num 3) (num 5) (num 7) (num 9))
    { nums | remove $base:is-even~ | take 5 | blast }]
 
   [interleave
    'Returns a sequence of the first item in each iterator, then the second, etc.'
-   (test:is-each a 1 b 2 c 3)
+   (test:assert-each a 1 b 2 c 3)
    { interleave (to-iter a b c) (to-iter 1 2 3) | blast }
    'Understands when to stop short.'
-   (test:is-each a 1 b 2)
+   (test:assert-each a 1 b 2)
    { interleave (to-iter a b) (to-iter 1 2 3) | blast }
    { interleave (to-iter a b c) (to-iter 1 2) | blast }]
 
   [interpose
    'Returns the elements from the nested iterator, interposed with `sep`.'
-   (test:is-each a , b , c)
+   (test:assert-each a , b , c)
    { interpose , (to-iter a b c) | blast }
    'Needs to elements from iter in order to interpose sep.'
-   (test:is-each a)
+   (test:assert-each a)
    { interpose , (to-iter a) | blast }]
 
   [unique
    'Like `uniq` but for iterators.'
-   (test:is-each a b c a)
+   (test:assert-each a b c a)
    { unique (to-iter a b b c c c a a a a) | blast }
-   (test:is-each a b c a d)
+   (test:assert-each a b c a d)
    { unique (to-iter a b b c c c a a a a d) | blast }
-   (test:is-each [a (num 1)] [b (num 2)] [c (num 3)] [a (num 4)])
+   (test:assert-each [a (num 1)] [b (num 2)] [c (num 3)] [a (num 4)])
    { unique (to-iter a b b c c c a a a a) &count=$true | blast }
-   (test:is-each [a (num 1)] [b (num 2)] [c (num 3)] [a (num 4)] [d (num 1)])
+   (test:assert-each [a (num 1)] [b (num 2)] [c (num 3)] [a (num 4)] [d (num 1)])
    { unique (to-iter a b b c c c a a a a d) &count=$true | blast }
    'Corner-case test'
-   (test:is-each a)
+   (test:assert-each a)
    { unique (to-iter a) | blast }
-   (test:is-each [a (num 1)])
+   (test:assert-each [a (num 1)])
    { unique (to-iter a) &count=$true | blast }]
 
   [take-while
    'Returns elements so long as `(f x)` returns $true.'
-   (test:is-each (num 0) (num 1) (num 2) (num 3) (num 4))
+   (test:assert-each (num 0) (num 1) (num 2) (num 3) (num 4))
    { nums | take-while {|n| < $n 5} | blast}]
 
   [drop-while
    'Drops elements until `(f x)` returns false.'
-   (test:is-each (num 5) (num 6) (num 7) (num 8) (num 9))
+   (test:assert-each (num 5) (num 6) (num 7) (num 8) (num 9))
    { nums | drop-while {|n| < $n 5} | take 5 | blast }]
 
   [partition
    "partitions an iterator into lists of size n."
-   (test:is-each [(num 0) (num 1) (num 2)] ^
+   (test:assert-each [(num 0) (num 1) (num 2)] ^
                  [(num 3) (num 4) (num 5)] ^
                  [(num 6) (num 7) (num 8)] ^
                  [(num 9) (num 10) (num 11)])
@@ -924,15 +924,15 @@ var tests = [lazy.elv
    { nums &stop=14 | partition 3 | blast }
 
    'Specify `&step=n` to specify a "starting point" for each partition.'
-   (test:is-each [(num 0) (num 1) (num 2)] [(num 5) (num 6) (num 7)])
+   (test:assert-each [(num 0) (num 1) (num 2)] [(num 5) (num 6) (num 7)])
    { nums &stop=12 | partition 3 &step=5 | blast }
 
    "`&step` can be < than the partition size."
-   (test:is-each [(num 0) (num 1)] [(num 1) (num 2)] [(num 2) (num 3)])
+   (test:assert-each [(num 0) (num 1)] [(num 1) (num 2)] [(num 2) (num 3)])
    { nums &stop=4 | partition 2 &step=1 | blast }
 
    "When there are not enough items to fill the last partition, a pad can be supplied."
-   (test:is-each [(num 0) (num 1) (num 2)] ^
+   (test:assert-each [(num 0) (num 1) (num 2)] ^
                  [(num 3) (num 4) (num 5)] ^
                  [(num 6) (num 7) (num 8)] ^
                  [(num 9) (num 10) (num 11)] ^
@@ -940,7 +940,7 @@ var tests = [lazy.elv
    { nums &stop=14 | partition 3 &pad=[a] | blast }
 
    "The size of the pad may exceed what is used."
-   (test:is-each [(num 0) (num 1) (num 2)] ^
+   (test:assert-each [(num 0) (num 1) (num 2)] ^
                  [(num 3) (num 4) (num 5)] ^
                  [(num 6) (num 7) (num 8)] ^
                  [(num 9) (num 10) (num 11)] ^
@@ -948,7 +948,7 @@ var tests = [lazy.elv
    { nums &stop=13 | partition 3 &pad=[a b] | blast }
 
    "...or not."
-   (test:is-each [(num 0) (num 1) (num 2)] ^
+   (test:assert-each [(num 0) (num 1) (num 2)] ^
                  [(num 3) (num 4) (num 5)] ^
                  [(num 6) (num 7) (num 8)] ^
                  [(num 9) (num 10) (num 11)] ^
@@ -958,7 +958,7 @@ var tests = [lazy.elv
   [partition-all
    'Convenience function for `partition` which supplies `&pad=[]`.'
    "Use when you don't want everything in the resultset."
-   (test:is-each [(num 0) (num 1) (num 2)] ^
+   (test:assert-each [(num 0) (num 1) (num 2)] ^
                  [(num 3) (num 4) (num 5)] ^
                  [(num 6) (num 7) (num 8)] ^
                  [(num 9) (num 10) (num 11)] ^
@@ -967,73 +967,73 @@ var tests = [lazy.elv
 
   [take-nth
    'Returns the nth element from the given iterator.'
-   (test:is-each (range 50 | fun:take-nth 5))
+   (test:assert-each (range 50 | fun:take-nth 5))
    { nums &stop=50 | take-nth 5 | blast }]
 
   [drop-last
    'Drops the last `n` elements from an iterator.'
-   (test:is-each (range 5))
+   (test:assert-each (range 5))
    { nums &stop=10 | drop-last 5 | blast }]
 
   [butlast
    'Drops the last element from an iterator'
-   (test:is-each (range 4))
+   (test:assert-each (range 4))
    { nums &stop=5 | butlast | blast }]
 
   [keep-indexed
    'Returns all non-empty & non-nil results of `(f index item)`.'
-   (test:is-each b d f)
+   (test:assert-each b d f)
    { to-iter a b c d e f g | keep-indexed {|i x| if (base:is-odd $i) { put $x } else { put $nil }} | blast }
 
    'And supply your own predicate.'
-   (test:is-each [(num 1) b] [(num 3) d] [(num 5) f])
+   (test:assert-each [(num 1) b] [(num 3) d] [(num 5) f])
    { to-iter a b c d e f g | keep-indexed {|i x| put [$i $x]} &pred=(fun:comp $base:first~ $base:is-odd~) | blast }]
 
   '# consumers'
   [blast
    'Simplest consumer.  "Blasts" the iterator output to the terminal.'
-   (test:is-each (range 10))
+   (test:assert-each (range 10))
    { range 10 | to-iter | blast }]
 
   [first
    'Returns the first element from an iterator.'
-   (test:is-one (num 0))
+   (test:assert-one (num 0))
    { nums | first }]
 
   [second
    'Returns the second element from an iterator.'
-   (test:is-one (num 1))
+   (test:assert-one (num 1))
    { nums | second }]
 
   [nth
    'Returns the nth element from an iterator'
-   (test:is-one (num 24))
+   (test:assert-one (num 24))
    { nums | nth 25 }]
 
   [some
    'Returns the first truthy value from `(f x)`.'
-   (test:is-one $true)
+   (test:assert-one $true)
    { nums &stop=20 | some {|i| < $i 50} }
-   (test:is-one $false)
+   (test:assert-one $false)
    { nums &stop=20 | some {|i| > $i 50} }
-   (test:is-one (num 0))
+   (test:assert-one (num 0))
    { nums &stop=20 | some {|i| if (< $i 50) { put $i } } }
    'Might return nothing, if nothing fits.'
-   (test:is-nothing)
+   (test:assert-nothing)
    { nums &stop=20 | some {|i| if (> $i 50) { put $i } } }]
 
   [first-pred
    'Like filter but returns the first value.'
-   (test:is-one (num 0))
+   (test:assert-one (num 0))
    { nums &stop=20 | first-pred {|i| < $i 50} }
-   (test:is-one (num 51))
+   (test:assert-one (num 51))
    { nums | first-pred {|i| > $i 50} }
-   (test:is-nothing)
+   (test:assert-nothing)
    { nums &stop=20 | first-pred {|i| > $i 50} }]
 
   [every
    'Returns `$true` if every element satisfies the predicate.  `$false` otherwise.'
-   (test:is-one $true)
+   (test:assert-one $true)
    { nums &stop=20 | every {|i| < $i 50} }
-   (test:is-one $false)
+   (test:assert-one $false)
    { nums | every {|i| < $i 50} }]]

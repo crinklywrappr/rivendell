@@ -95,18 +95,18 @@ Lazy generators.
     'Miscelaneous algorithms and generators to showcase rivendell.  May not be useful.'
     [fibs
      'This is a var that represents an infinite list of fibonacci numbers.'
-     (t:is-each (each $num~ [1 1 2 3 5 8 13 21 34 55]))
+     (t:assert-each (each $num~ [1 1 2 3 5 8 13 21 34 55]))
      { l:take 10 $fibs | l:blast }]
 
     [primes
      'Function which returns an iterator which represents an infinite list of primes.'
-     (t:is-each (each $num~ [2 3 5 7 11 13 17 19 23 29]))
+     (t:assert-each (each $num~ [2 3 5 7 11 13 17 19 23 29]))
      { l:take 10 (primes) | l:blast }]
 
     [levenshtein
      'basic levenshtein function to measure the distance between two strings.'
-     (t:is-one (num 0))
+     (t:assert-one (num 0))
      { levenshtein hello hello }
-     (t:is-one (num 4))
+     (t:assert-one (num 4))
      { levenshtein hello world }]]
 #+end_src
