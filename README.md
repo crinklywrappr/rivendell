@@ -53,7 +53,7 @@ var f = {|line-no| head -n $line-no NST-EST2021-alldata.csv | tail -n 1 | s:spli
 var popkeys = ($f 1)
 
 l:nums &start=(num 7) ^
-| l:each (f:comp $f (f:partial $f:zipmap~ $popkeys) (f:juxt (f:get NAME) (f:get POPESTIMATE2021)) $f:listify~) ^
+| l:each (f:comp $f (f:partial $f:zipmap~ $popkeys) (f:juxt (f:k NAME) (f:k POPESTIMATE2021)) $f:listify~) ^
 | l:take 20 ^
 | l:blast ^
 | v:barky (all) &min=0

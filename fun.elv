@@ -98,9 +98,19 @@ fn update-in {|m ks f|
   }
 }
 
-fn get {|key|
+fn k {|key|
   put {|m|
     put $m[$key]
+  }
+}
+
+fn sk {|key &miss=$nil|
+  put {|m|
+    if (has-key $m $key) {
+      put $m[$key]
+    } else {
+      put $miss
+    }
   }
 }
 
@@ -984,12 +994,22 @@ var tests = [Fun.elv
    { index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] weight }
    { put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] }]
 
-  [get
+  [k
    'Takes a key and returns a closure which looks that key up in a map.'
    (test:assert-fn)
-   { get a }
+   { k a }
    (test:assert-one 1)
-   { (get a) [&a=1 &b=2] }]
+   { (k a) [&a=1 &b=2] }]
+
+  [sk
+   'Like `k`, but performs a safe lookup.'
+   (test:assert-error)
+   { (k a) [&] }
+   (test:assert-one (num 0))
+   { (sk a &miss=(num 0)) [&]}
+   'By default returns `$nil`.'
+   (test:assert-nil)
+   { (sk a) [&] }]
 
   '# Function modifiers'
   [destruct
@@ -1084,6 +1104,18 @@ var tests = [Fun.elv
    "A fun thing to try is `reductions` with the following test.  Just remove the call to `all`."
    (test:assert-each 0 1 2 3 4 5)
    { all (reduce (box {|a b| each {|x| put $x } $a; put $b }) [] 0 1 2 3 4 5) }]
+
+  [reduce-when
+   'convenience function for `reduce`.'
+   (test:assert-one (num 100))
+   { reduce {|acc n| if (base:is-odd $n) { + $acc $n } else { put $acc }} (range 20) }
+   { reduce-when {|acc n| base:is-odd $n} $'+~' (range 20) }
+   { reduce-when (comp $second~ $base:is-odd~) $'+~' (range 20) }]
+
+  [reduce-while
+   'short-curcuits the reduction when the predicate is met.'
+   (test:assert-one (num 45))
+   { reduce-while {|acc n| < $n 10} $'+~' (range 20) }]
 
   [reduce-kv
    'Like reduce, but the provided function params look like `[accumulator key value]` instead of [accumulator value]'

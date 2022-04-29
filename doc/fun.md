@@ -30,51 +30,54 @@
 29. [update-in](#update-in)
 30. [rename-keys](#rename-keys)
 31. [index](#index)
-32. [get](#get)
-33. [destruct](#destruct)
-34. [complement](#complement)
-35. [partial](#partial)
-36. [juxt](#juxt)
-37. [constantly](#constantly)
-38. [comp](#comp)
-39. [box](#box)
-40. [memoize](#memoize)
-41. [repeatedly](#repeatedly)
-42. [reduce](#reduce)
-43. [reduce-kv](#reduce-kv)
-44. [reductions](#reductions)
-45. [filter](#filter)
-46. [remove](#remove)
-47. [into](#into)
-48. [reverse](#reverse)
-49. [distinct](#distinct)
-50. [unique](#unique)
-51. [replace](#replace)
-52. [interleave](#interleave)
-53. [interpose](#interpose)
-54. [partition](#partition)
-55. [partition-all](#partition-all)
-56. [iterate](#iterate)
-57. [take-nth](#take-nth)
-58. [take-while](#take-while)
-59. [drop-while](#drop-while)
-60. [drop-last](#drop-last)
-61. [butlast](#butlast)
-62. [some](#some)
-63. [first-pred](#first-pred)
-64. [every](#every)
-65. [not-every](#not-every)
-66. [not-any](#not-any)
-67. [keep](#keep)
-68. [map](#map)
-69. [mapcat](#mapcat)
-70. [map-indexed](#map-indexed)
-71. [zipmap](#zipmap)
-72. [keep-indexed](#keep-indexed)
-73. [pivot](#pivot)
+32. [k](#k)
+33. [sk](#sk)
+34. [destruct](#destruct)
+35. [complement](#complement)
+36. [partial](#partial)
+37. [juxt](#juxt)
+38. [constantly](#constantly)
+39. [comp](#comp)
+40. [box](#box)
+41. [memoize](#memoize)
+42. [repeatedly](#repeatedly)
+43. [reduce](#reduce)
+44. [reduce-when](#reduce-when)
+45. [reduce-while](#reduce-while)
+46. [reduce-kv](#reduce-kv)
+47. [reductions](#reductions)
+48. [filter](#filter)
+49. [remove](#remove)
+50. [into](#into)
+51. [reverse](#reverse)
+52. [distinct](#distinct)
+53. [unique](#unique)
+54. [replace](#replace)
+55. [interleave](#interleave)
+56. [interpose](#interpose)
+57. [partition](#partition)
+58. [partition-all](#partition-all)
+59. [iterate](#iterate)
+60. [take-nth](#take-nth)
+61. [take-while](#take-while)
+62. [drop-while](#drop-while)
+63. [drop-last](#drop-last)
+64. [butlast](#butlast)
+65. [some](#some)
+66. [first-pred](#first-pred)
+67. [every](#every)
+68. [not-every](#not-every)
+69. [not-any](#not-any)
+70. [keep](#keep)
+71. [map](#map)
+72. [mapcat](#mapcat)
+73. [map-indexed](#map-indexed)
+74. [zipmap](#zipmap)
+75. [keep-indexed](#keep-indexed)
+76. [pivot](#pivot)
 ***
 ## testing-status
-218 tests passed out of 218
+225 tests passed out of 225
 
 100% of tests are passing
 
@@ -207,11 +210,10 @@ rand-sample 0 (range 10)
 MATCHES EXPECTATIONS: `[nothing]`
 ```elvish
 rand-sample 0.5 (range 10)
-▶ 2
-▶ 3
+▶ 0
+▶ 1
 ▶ 4
-▶ 6
-▶ 7
+▶ 5
 ▶ 9
 ```
 ```elvish
@@ -236,47 +238,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
-▶ 3
-▶ 2
+▶ 7
+▶ 1
+▶ 6
 ▶ 5
-▶ 4
-▶ 8
+▶ 9
 ```
 ```elvish
 range 10 | sample 5
+▶ 3
 ▶ 4
-▶ 1
-▶ 9
-▶ 5
+▶ 2
 ▶ 7
+▶ 8
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
-▶ 4
-▶ 0
-▶ 2
-▶ 5
 ▶ 8
-▶ 3
-▶ 9
-▶ 7
 ▶ 6
+▶ 2
+▶ 7
+▶ 4
+▶ 3
+▶ 5
+▶ 0
+▶ 9
 ▶ 1
 ```
 ```elvish
 range 10 | shuffle
-▶ 8
-▶ 2
-▶ 0
 ▶ 7
-▶ 4
-▶ 5
-▶ 1
-▶ 6
-▶ 9
+▶ 0
 ▶ 3
+▶ 8
+▶ 6
+▶ 1
+▶ 4
+▶ 2
+▶ 5
+▶ 9
 ```
  
 # Set functions
@@ -569,16 +571,34 @@ put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=s
 ▶ [&[&weight=1000]=[[&name=betsy &weight=1000] [&name=shyq &weight=1000]] &[&weight=756]=[[&name=jake &weight=756]]]
 ```
 ***
-## get
+## k
  
 Takes a key and returns a closure which looks that key up in a map.
 ```elvish
-get a
-▶ <closure 0xc000ec3c80>
+k a
+▶ <closure 0xc001987b00>
 ```
 ```elvish
-(get a) [&a=1 &b=2]
+(k a) [&a=1 &b=2]
 ▶ 1
+```
+***
+## sk
+ 
+Like `k`, but performs a safe lookup.
+```elvish
+(k a) [&]
+▶ [&reason=<unknown no such key: a>]
+```
+```elvish
+(sk a &miss=(num 0)) [&]
+▶ 0
+```
+ 
+By default returns `$nil`.
+```elvish
+(sk a) [&]
+▶ $nil
 ```
  
 # Function modifiers
@@ -692,19 +712,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc00043afc0>
+▶ <closure 0xc000255380>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.000877298s
+▶ 1.000810848s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
-▶ 299.32µs
 ▶ 100
+▶ 305.764µs
 ```
 ***
 ## repeatedly
@@ -712,16 +732,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 634
-▶ 892
-▶ 75
-▶ 173
-▶ 237
-▶ 132
-▶ 172
-▶ 49
-▶ 986
-▶ 437
+▶ 897
+▶ 881
+▶ 899
+▶ 744
+▶ 660
+▶ 189
+▶ 371
+▶ 572
+▶ 797
+▶ 159
 ```
  
 # Reduce & company
@@ -759,6 +779,26 @@ all (reduce (box {|a b| each {|x| put $x } $a; put $b }) [] 0 1 2 3 4 5)
 ▶ 3
 ▶ 4
 ▶ 5
+```
+***
+## reduce-when
+ 
+convenience function for `reduce`.
+```elvish
+reduce {|acc n| if (base:is-odd $n) { + $acc $n } else { put $acc }} (range 20)
+reduce-when {|acc n| base:is-odd $n} $'+~' (range 20)
+reduce-when (comp $second~ $base:is-odd~) $'+~' (range 20)
+```
+```elvish
+▶ 100
+```
+***
+## reduce-while
+ 
+short-curcuits the reduction when the predicate is met.
+```elvish
+reduce-while {|acc n| < $n 10} $'+~' (range 20)
+▶ 45
 ```
 ***
 ## reduce-kv

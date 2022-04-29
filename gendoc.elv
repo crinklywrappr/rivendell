@@ -17,3 +17,13 @@ fn gendoc {
   test:test $algo:tests | test:md (all) > doc/algo.md
   test:test $vis:tests | test:md (all) > doc/vis.md
 }
+
+fn test-all {
+  test:test $test:tests | test:err (all)
+  test:test $base:tests | test:err (all)
+  test:test $fun:tests  | test:err (all)
+  test:test $lazy:tests | test:err (all)
+  test:test $rune:tests | test:err (all)
+  test:test $algo:tests | test:err (all)
+  test:test $vis:tests  | test:err (all)
+}
