@@ -3,6 +3,7 @@ use ./base b
 use ./lazy l
 use ./fun f
 use math m
+use str s
 
 var fibs = (l:iterate (f:destruct {|x y| put [$y (+ $x $y)]}) [(num 1) (num 1)] | l:each $b:first~)
 
@@ -41,6 +42,32 @@ fn primes {
   | l:each $b:second~ ^
   | l:prepend [(num 2)]
 
+}
+
+fn line-count {|@files|
+  set @files = (b:check-pipe $files)
+  each {|file|
+    wc -l $file ^
+    | s:trim (one) ' ' ^
+    | s:split ' ' (one) ^
+    | {|n f| put [(num $n) $f]} (all)
+  } $files
+}
+
+fn lines {|f &follow=$false|
+  if $follow {
+    l:make-iterator ^
+    &curr={ tail -n 0 -f $f | sed '1q;d' | one } ^
+    &done={ put $false }
+  } else {
+    var i
+
+    l:make-iterator ^
+    &init={ set i = (num 1) } ^
+    &curr={ sed {$i}'q;d' $f } ^
+    &step={ set i = (b:inc $i) } ^
+    &done={ > $i (b:first (line-count $f)) }
+  }
 }
 
 fn levenshtein {|w1 w2|
