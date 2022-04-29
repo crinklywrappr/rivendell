@@ -1,4 +1,4 @@
-use dev/rivendell/test
+use ./test
 
 # currently only work with integers
 fn is-even {|n| == (% $n 2) 0 }

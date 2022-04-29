@@ -1,9 +1,9 @@
 use re
 use str
 use math
-use dev/rivendell/base
-use dev/rivendell/test
-use dev/rivendell/fun
+use ./base
+use ./test
+use ./fun
 
 fn is-unicode {|s|
   != (count $s) (wcswidth $s)

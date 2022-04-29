@@ -1,5 +1,5 @@
-use dev/rivendell/test
-use dev/rivendell/base
+use ./test
+use ./base
 use math
 
 fn listify {|@els|

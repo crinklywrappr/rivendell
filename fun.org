@@ -11,8 +11,8 @@ There is a core distinction made between "scalar" and "array" values in this
 module.  "scalar" values are treated as eg `$`, and "array" as `@`.
 
 #+begin_src elvish :tangle ./fun.elv
-  use dev/rivendell/test
-  use dev/rivendell/base
+  use ./test
+  use ./base
   use math
 #+end_src
 

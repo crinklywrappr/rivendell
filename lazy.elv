@@ -1,6 +1,6 @@
-use dev/rivendell/test
-use dev/rivendell/base
-use dev/rivendell/fun
+use ./test
+use ./base
+use ./fun
 
 fn make-iterator {|&init={ } &curr={ } &step={ } &done={ }|
   put [&init=$init

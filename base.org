@@ -9,7 +9,7 @@ Functions which are generally useful throughout the rest of the library.
 Probably not very useful to users.
 
 #+begin_src elvish :tangle ./base.elv
-  use dev/rivendell/test
+  use ./test
 #+end_src
 
 

@@ -1,7 +1,7 @@
-use dev/rivendell/test t
-use dev/rivendell/base b
-use dev/rivendell/lazy l
-use dev/rivendell/fun f
+use ./test t
+use ./base b
+use ./lazy l
+use ./fun f
 use math m
 
 var fibs = (l:iterate (f:destruct {|x y| put [$y (+ $x $y)]}) [(num 1) (num 1)] | l:each $b:first~)

@@ -8,10 +8,10 @@
 Miscelaneous algorithms and generators to showcase rivendell.  May not be useful.
 
 #+begin_src elvish :tangle ./algo.elv
-  use dev/rivendell/test t
-  use dev/rivendell/base b
-  use dev/rivendell/lazy l
-  use dev/rivendell/fun f
+  use ./test t
+  use ./base b
+  use ./lazy l
+  use ./fun f
   use math m
 #+end_src
 

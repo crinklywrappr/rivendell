@@ -24,9 +24,9 @@ number of iterators, and finally pipe that to a consumer.
 
 
 #+begin_src elvish :tangle ./lazy.elv
-  use dev/rivendell/test
-  use dev/rivendell/base
-  use dev/rivendell/fun
+  use ./test
+  use ./base
+  use ./fun
 #+end_src
 
 * iterator structure

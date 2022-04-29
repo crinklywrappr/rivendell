@@ -1,10 +1,10 @@
 use re
 use str s
 use math m
-use dev/rivendell/base b
-use dev/rivendell/fun f
-use dev/rivendell/rune r
-use dev/rivendell/test t
+use ./base b
+use ./fun f
+use ./rune r
+use ./test t
 
 fn sparky {|@args &min=$false &max=$false|
   set @args = (b:check-pipe $args)
