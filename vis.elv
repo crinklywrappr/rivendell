@@ -122,8 +122,8 @@ var tests = [vis.elv
      "   9=29 █████████████████████████████████████████████████████████████████" ^
      "  10=31 █████████████████████████████████████████████████████████████████████")
    {
-     use dev/rivendell/algo
-     use dev/rivendell/lazy
+     use ./algo
+     use ./lazy
      algo:primes ^
      | lazy:map-indexed {|k v| put [{$k}={$v} $v]} ^
      | lazy:take 11 ^
