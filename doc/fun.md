@@ -210,10 +210,12 @@ rand-sample 0 (range 10)
 MATCHES EXPECTATIONS: `[nothing]`
 ```elvish
 rand-sample 0.5 (range 10)
-▶ 0
 ▶ 1
+▶ 2
+▶ 3
 ▶ 4
-▶ 5
+▶ 7
+▶ 8
 ▶ 9
 ```
 ```elvish
@@ -238,47 +240,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
+▶ 9
+▶ 4
+▶ 6
 ▶ 7
 ▶ 1
-▶ 6
-▶ 5
-▶ 9
 ```
 ```elvish
 range 10 | sample 5
-▶ 3
 ▶ 4
-▶ 2
-▶ 7
+▶ 1
+▶ 0
+▶ 3
 ▶ 8
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
-▶ 8
-▶ 6
-▶ 2
-▶ 7
-▶ 4
 ▶ 3
-▶ 5
-▶ 0
-▶ 9
 ▶ 1
+▶ 8
+▶ 7
+▶ 5
+▶ 2
+▶ 9
+▶ 0
+▶ 6
+▶ 4
 ```
 ```elvish
 range 10 | shuffle
-▶ 7
-▶ 0
-▶ 3
-▶ 8
-▶ 6
-▶ 1
-▶ 4
-▶ 2
 ▶ 5
+▶ 8
+▶ 4
+▶ 3
+▶ 0
+▶ 6
 ▶ 9
+▶ 7
+▶ 2
+▶ 1
 ```
  
 # Set functions
@@ -576,7 +578,7 @@ put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=s
 Takes a key and returns a closure which looks that key up in a map.
 ```elvish
 k a
-▶ <closure 0xc001987b00>
+▶ <closure 0xc000c2bc80>
 ```
 ```elvish
 (k a) [&a=1 &b=2]
@@ -712,19 +714,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc000255380>
+▶ <closure 0xc000bbf2c0>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.000810848s
+▶ 1.001739955s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 305.764µs
+▶ 257.814µs
 ```
 ***
 ## repeatedly
@@ -732,16 +734,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 897
-▶ 881
-▶ 899
-▶ 744
-▶ 660
-▶ 189
-▶ 371
-▶ 572
-▶ 797
-▶ 159
+▶ 561
+▶ 419
+▶ 525
+▶ 687
+▶ 634
+▶ 460
+▶ 482
+▶ 9
+▶ 571
+▶ 757
 ```
  
 # Reduce & company

@@ -40,6 +40,8 @@ fn barky {
    &desc-pct=(num 0.2) ^
    &min=$nil &max=$nil|
 
+  set @args = (b:check-pipe $args)
+
   if (not (< 0 $desc-pct 1)) {
     put "invalid description size"
     return

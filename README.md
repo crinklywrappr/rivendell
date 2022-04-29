@@ -48,15 +48,17 @@ use github.com/crinklywrappr/rivendell/vis v
 
 # lazily graphing population data from the 2021 census
 
-var f = {|line-no| head -n $line-no NST-EST2021-alldata.csv | tail -n 1 | s:split , (one) | f:listify}
+var file = (a:lines NST-EST2021-alldata.csv)
 
-var popkeys = ($f 1)
+var f = {|line| s:split , $line | f:listify}
 
-l:nums &start=(num 7) ^
+var popkeys = ($f (l:first $file))
+
+l:drop 6 $file ^
 | l:each (f:comp $f (f:partial $f:zipmap~ $popkeys) (f:juxt (f:k NAME) (f:k POPESTIMATE2021)) $f:listify~) ^
 | l:take 20 ^
 | l:blast ^
-| v:barky (all) &min=0
+| v:barky &min=0
 
         Alabama ████████
          Alaska █
