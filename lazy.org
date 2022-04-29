@@ -3,9 +3,9 @@
 #+AUTHOR: Daniel Fitzpatrick
 #+OPTIONS: toc:t
 
-# TODO: add `replace`
-# TODO: add `not-every`
-# TODO: add `not-any`
+#+TODO: add `replace`
+#+TODO: add `not-every`
+#+TODO: add `not-any`
 
 * about
 
