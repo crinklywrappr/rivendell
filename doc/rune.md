@@ -101,7 +101,7 @@ substr '你好，世界' &from=1 &to=-1
 truncates a string to a specified screen width.
 ```elvish
 trunc 9 'hello, world'
-▶ hello, wo…
+▶ hello, w…
 ```
 ```elvish
 trunc 9 '你好，世界'

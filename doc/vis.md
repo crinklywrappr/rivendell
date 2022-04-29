@@ -51,7 +51,7 @@ range 20 | sparky &min=5 &max=15
 shuffled sparkline
 ```elvish
 range 20 | f:shuffle | sparky
-▶ ▂▆▄▃▅▂▃▇▂▄▅▆▅▆▁ ▃▇▁█
+▶ ▆▁▁▂ ▃▂▄▇▆▂▅▇█▃▅▆▃▅▄
 ```
 ***
 ## barky

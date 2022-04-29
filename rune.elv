@@ -36,6 +36,7 @@ fn trunc {|n s|
   } elif (>= (wcswidth $s[0]) $n) {
     put …
   } elif (is-ascii $s) {
+    set n = (base:dec $n)
     put {$s[..{$n}]}'…'
   } else {
     set n = (base:dec $n)
@@ -135,7 +136,7 @@ var tests = [rune.elv
 
   [trunc
    'truncates a string to a specified screen width.'
-   (test:assert-one 'hello, wo…')
+   (test:assert-one 'hello, w…')
    { trunc 9 'hello, world' }
    (test:assert-one '你好，世…')
    { trunc 9 '你好，世界' }
