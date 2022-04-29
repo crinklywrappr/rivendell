@@ -52,12 +52,8 @@ var f = {|line-no| head -n $line-no NST-EST2021-alldata.csv | tail -n 1 | s:spli
 
 var popkeys = ($f 1)
 
-var getpop = {|m| put $m[POPESTIMATE2021]}
-
-var getstate = {|m| put $m[NAME]}
-
 l:nums &start=(num 7) ^
-| l:each (f:comp $f (f:partial $f:zipmap~ $popkeys) (f:juxt $getstate $getpop) $f:listify~) ^
+| l:each (f:comp $f (f:partial $f:zipmap~ $popkeys) (f:juxt (f:get NAME) (f:get POPESTIMATE2021)) $f:listify~) ^
 | l:take 20 ^
 | l:blast ^
 | v:barky (all) &min=0
