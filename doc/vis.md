@@ -51,7 +51,7 @@ range 20 | sparky &min=5 &max=15
 shuffled sparkline
 ```elvish
 range 20 | f:shuffle | sparky
-▶ ▄▄▆▃▁▃ ▂▆▂▃▅▂▅▆▇▅▁▇█
+▶ ▂▆▄▃▅▂▃▇▂▄▅▆▅▆▁ ▃▇▁█
 ```
 ***
 ## barky
@@ -60,8 +60,8 @@ Produces histograms.  Has lots of options.
  
 Charting the first 11 prime numbers.
 ```elvish
-   use dev/rivendell/algo
-   use dev/rivendell/lazy
+   use ./algo
+   use ./lazy
    algo:primes ^
      | lazy:map-indexed {|k v| put [{$k}={$v} $v]} ^
        | lazy:take 11 ^
