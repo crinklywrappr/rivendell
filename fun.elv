@@ -98,6 +98,12 @@ fn update-in {|m ks f|
   }
 }
 
+fn get {|key|
+  put {|m|
+    put $m[$key]
+  }
+}
+
 fn destruct {|f|
   put {|x|
     $f (all $x)
@@ -977,6 +983,13 @@ var tests = [Fun.elv
    (test:assert-one [&[&weight=1000]=[[&name=betsy &weight=1000] [&name=shyq &weight=1000]] &[&weight=756]=[[&name=jake &weight=756]]])
    { index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] weight }
    { put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] }]
+
+  [get
+   'Takes a key and returns a closure which looks that key up in a map.'
+   (test:assert-fn)
+   { get a }
+   (test:assert-one 1)
+   { (get a) [&a=1 &b=2] }]
 
   '# Function modifiers'
   [destruct

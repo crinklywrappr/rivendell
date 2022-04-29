@@ -122,6 +122,12 @@ Functions which operate on maps and don't rely on other functions in fun module.
       put $m
     }
   }
+
+  fn get {|key|
+    put {|m|
+      put $m[$key]
+    }
+  }
 #+end_src
 
 * low-level fn functions
@@ -1115,6 +1121,13 @@ Tests for this module.
      (test:assert-one [&[&weight=1000]=[[&name=betsy &weight=1000] [&name=shyq &weight=1000]] &[&weight=756]=[[&name=jake &weight=756]]])
      { index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] weight }
      { put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=shyq &weight=1000]] }]
+
+    [get
+     'Takes a key and returns a closure which looks that key up in a map.'
+     (test:assert-fn)
+     { get a }
+     (test:assert-one 1)
+     { (get a) [&a=1 &b=2] }]
 
     '# Function modifiers'
     [destruct

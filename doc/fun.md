@@ -30,50 +30,51 @@
 29. [update-in](#update-in)
 30. [rename-keys](#rename-keys)
 31. [index](#index)
-32. [destruct](#destruct)
-33. [complement](#complement)
-34. [partial](#partial)
-35. [juxt](#juxt)
-36. [constantly](#constantly)
-37. [comp](#comp)
-38. [box](#box)
-39. [memoize](#memoize)
-40. [repeatedly](#repeatedly)
-41. [reduce](#reduce)
-42. [reduce-kv](#reduce-kv)
-43. [reductions](#reductions)
-44. [filter](#filter)
-45. [remove](#remove)
-46. [into](#into)
-47. [reverse](#reverse)
-48. [distinct](#distinct)
-49. [unique](#unique)
-50. [replace](#replace)
-51. [interleave](#interleave)
-52. [interpose](#interpose)
-53. [partition](#partition)
-54. [partition-all](#partition-all)
-55. [iterate](#iterate)
-56. [take-nth](#take-nth)
-57. [take-while](#take-while)
-58. [drop-while](#drop-while)
-59. [drop-last](#drop-last)
-60. [butlast](#butlast)
-61. [some](#some)
-62. [first-pred](#first-pred)
-63. [every](#every)
-64. [not-every](#not-every)
-65. [not-any](#not-any)
-66. [keep](#keep)
-67. [map](#map)
-68. [mapcat](#mapcat)
-69. [map-indexed](#map-indexed)
-70. [zipmap](#zipmap)
-71. [keep-indexed](#keep-indexed)
-72. [pivot](#pivot)
+32. [get](#get)
+33. [destruct](#destruct)
+34. [complement](#complement)
+35. [partial](#partial)
+36. [juxt](#juxt)
+37. [constantly](#constantly)
+38. [comp](#comp)
+39. [box](#box)
+40. [memoize](#memoize)
+41. [repeatedly](#repeatedly)
+42. [reduce](#reduce)
+43. [reduce-kv](#reduce-kv)
+44. [reductions](#reductions)
+45. [filter](#filter)
+46. [remove](#remove)
+47. [into](#into)
+48. [reverse](#reverse)
+49. [distinct](#distinct)
+50. [unique](#unique)
+51. [replace](#replace)
+52. [interleave](#interleave)
+53. [interpose](#interpose)
+54. [partition](#partition)
+55. [partition-all](#partition-all)
+56. [iterate](#iterate)
+57. [take-nth](#take-nth)
+58. [take-while](#take-while)
+59. [drop-while](#drop-while)
+60. [drop-last](#drop-last)
+61. [butlast](#butlast)
+62. [some](#some)
+63. [first-pred](#first-pred)
+64. [every](#every)
+65. [not-every](#not-every)
+66. [not-any](#not-any)
+67. [keep](#keep)
+68. [map](#map)
+69. [mapcat](#mapcat)
+70. [map-indexed](#map-indexed)
+71. [zipmap](#zipmap)
+72. [keep-indexed](#keep-indexed)
+73. [pivot](#pivot)
 ***
 ## testing-status
-216 tests passed out of 216
+218 tests passed out of 218
 
 100% of tests are passing
 
@@ -206,12 +207,11 @@ rand-sample 0 (range 10)
 MATCHES EXPECTATIONS: `[nothing]`
 ```elvish
 rand-sample 0.5 (range 10)
-▶ 0
+▶ 2
+▶ 3
 ▶ 4
-▶ 5
 ▶ 6
 ▶ 7
-▶ 8
 ▶ 9
 ```
 ```elvish
@@ -236,47 +236,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
-▶ 6
-▶ 1
-▶ 9
-▶ 4
+▶ 3
 ▶ 2
+▶ 5
+▶ 4
+▶ 8
 ```
 ```elvish
 range 10 | sample 5
-▶ 7
+▶ 4
+▶ 1
 ▶ 9
-▶ 6
 ▶ 5
-▶ 8
+▶ 7
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
-▶ 7
-▶ 1
-▶ 6
-▶ 8
-▶ 5
-▶ 2
 ▶ 4
+▶ 0
+▶ 2
+▶ 5
+▶ 8
 ▶ 3
 ▶ 9
-▶ 0
+▶ 7
+▶ 6
+▶ 1
 ```
 ```elvish
 range 10 | shuffle
-▶ 0
-▶ 4
 ▶ 8
-▶ 3
 ▶ 2
+▶ 0
 ▶ 7
-▶ 6
+▶ 4
 ▶ 5
-▶ 9
 ▶ 1
+▶ 6
+▶ 9
+▶ 3
 ```
  
 # Set functions
@@ -568,6 +568,18 @@ put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=s
 ```elvish
 ▶ [&[&weight=1000]=[[&name=betsy &weight=1000] [&name=shyq &weight=1000]] &[&weight=756]=[[&name=jake &weight=756]]]
 ```
+***
+## get
+ 
+Takes a key and returns a closure which looks that key up in a map.
+```elvish
+get a
+▶ <closure 0xc000ec3c80>
+```
+```elvish
+(get a) [&a=1 &b=2]
+▶ 1
+```
  
 # Function modifiers
 ***
@@ -680,19 +692,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc0003275c0>
+▶ <closure 0xc00043afc0>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.001045996s
+▶ 1.000877298s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
+▶ 299.32µs
 ▶ 100
-▶ 265.433µs
 ```
 ***
 ## repeatedly
@@ -700,16 +712,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 939
-▶ 688
-▶ 716
-▶ 190
-▶ 119
-▶ 611
-▶ 382
-▶ 804
-▶ 155
-▶ 11
+▶ 634
+▶ 892
+▶ 75
+▶ 173
+▶ 237
+▶ 132
+▶ 172
+▶ 49
+▶ 986
+▶ 437
 ```
  
 # Reduce & company
