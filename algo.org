@@ -3,9 +3,6 @@
 #+AUTHOR: Daniel Fitzpatrick
 #+OPTIONS: toc:t
 
-#+TODO: Add sort
-#+TODO: Add sort-by
-
 * about
 
 Miscelaneous algorithms and generators to showcase rivendell.  May not be useful.
