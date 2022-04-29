@@ -94,6 +94,9 @@ Run the following command to browse the docs.
 glow ~/.local/share/elvish/lib/github.com/crinklywrappr/rivendell/
 ```
 
+![Browsing downloaded documentation inside glow](https://user-images.githubusercontent.com/56522/165880434-6fd21c05-56ae-45a0-8813-2d0792f056fb.png)
+
+
 ## Testing / Generating documentation
 Tests are run and Markdown documentation is generated with this command.
 
