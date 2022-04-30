@@ -9,15 +9,6 @@ Rivendell adds useful functionality to [elvish](https://elv.sh/) to take your sh
 - :chart_with_upwards_trend: visual aids: sparklines & histograms.
 - :wrench: plus a toolbelt of common utility functions which operate on strings, lists, and maps.
 
-## About
-
-This library hosts a number of functions that push [elvish](https://elv.sh/) to it's limits.
-
-- functional bits: high-level functions which encapsulate common design patterns.
-- lazy iterators: transducer-inspired iterators which allow you to represent infinite sequences.
-- visual aids: sparklines & histograms.
-- plus a toolbelt of common utility functions which operate on strings, lists, and maps.
-
 ## Documentation
 
 - [test.elv](doc/test.md)
