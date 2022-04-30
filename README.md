@@ -2,6 +2,15 @@
 
 ## About
 
+Rivendell adds useful functionality to [elvish](https://elv.sh/) to take your shell to the next level!
+
+- :rainbow: functional bits: high-level functions which encapsulate common design patterns.
+- :zzz: lazy iterators: transducer-inspired iterators which allow you to represent infinite sequences.
+- :chart_with_upwards_trend: visual aids: sparklines & histograms.
+- :wrench: plus a toolbelt of common utility functions which operate on strings, lists, and maps.
+
+## About
+
 This library hosts a number of functions that push [elvish](https://elv.sh/) to it's limits.
 
 - functional bits: high-level functions which encapsulate common design patterns.
