@@ -111,6 +111,7 @@ I recommend [glow](https://github.com/charmbracelet/glow) for reading documentat
 
 ## Articles
 
-- [Playing around with Elvish, a new(ish) shell](https://dev.to/crinklywrappr/playing-around-with-elvish-a-new-ish-shell-5h16)
-- [Generating docs from tests](https://dev.to/crinklywrappr/generating-docs-from-tests-l64)
+- [[Ann] Rivendell updated](https://dev.to/crinklywrappr/ann-rivendell-updated-53jl)
 - [Flashcards in the terminal](https://dev.to/crinklywrappr/flashcards-in-the-terminal-2akj)
+- [Generating docs from tests](https://dev.to/crinklywrappr/generating-docs-from-tests-l64)
+- [Playing around with Elvish, a new(ish) shell](https://dev.to/crinklywrappr/playing-around-with-elvish-a-new-ish-shell-5h16)
