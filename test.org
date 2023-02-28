@@ -758,9 +758,9 @@ Tests for this module
      { (assert-coll)[f] { put [a b c] } | put (one)[bool] }
      { (assert-coll)[f] { put [&foo=bar] } | put (one)[bool] }
 
-     '`assert-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.'
+     '`assert-num` works on nums & inexact-nums.  It could expand to more types if elvish adds more in the future.'
      { (assert-num)[f] { num 1 } | put (one)[bool] }
-     { (assert-num)[f] { float64 1 } | put (one)[bool] }
+     { (assert-num)[f] { inexact-num 1 } | put (one)[bool] }
 
      '`assert-ok` does not exist (yet), but you can get it with this.  In this example `{ put foo }` is the function we are testing for success.  We do not care about the return value - only that the function works without error'
      { (assert-one $ok)[f] { var @_ = (var err = ?({ put foo })); put $err } | put (one)[bool] }
