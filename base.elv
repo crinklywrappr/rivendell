@@ -67,28 +67,28 @@ var tests = [base.elv
   'These functions largely assume numbers, lists, and strings.  The list operations are of dubious usefulness for users, however.'
   '# Math functions'
   [is-zero
-   'works with text, nums, and floats'
+   'works with text, nums, and inexact-nums'
    (test:assert-one $true)
    { is-zero 0 }
    { is-zero (num 0) }
-   { is-zero (float64 0) }
+   { is-zero (inexact-num 0) }
 
    (test:assert-one $false)
    { is-zero 1 }
    { is-zero (randint 1 100) }
-   { is-zero (float64 (randint 1 100)) }]
+   { is-zero (inexact-num (randint 1 100)) }]
 
   [is-one
-   'works with text, nums, and floats'
+   'works with text, nums, and inexact-nums'
    (test:assert-one $true)
    { is-one 1 }
    { is-one (num 1) }
-   { is-one (float64 1) }
+   { is-one (inexact-num 1) }
 
    (test:assert-one $false)
    { is-one 0 }
    { is-one (num 0)}
-   { is-one (float64 0)}]
+   { is-one (inexact-num 0)}]
 
   [evens
    'only works with strings & nums'
@@ -96,7 +96,7 @@ var tests = [base.elv
    { range -5 6 | each $is-even~ }
    { range -5 6 | each $to-string~ | each $is-even~ }
 
-   'fails with floats'
+   'fails with inexact-nums'
    (test:assert-error)
    { is-even 5.0 }]
 
@@ -106,12 +106,12 @@ var tests = [base.elv
    { range -5 6 | each $is-odd~ }
    { range -5 6 | each $to-string~ | each $is-odd~ }
 
-   'fails with floats'
+   'fails with inexact-nums'
    (test:assert-error)
    { is-odd 5.0 }]
 
   [inc
-   'works with text, nums, and floats'
+   'works with text, nums, and inexact-nums'
    (test:assert-each (range -4 7))
    { range -5 6 | each $inc~ }
 
@@ -119,10 +119,10 @@ var tests = [base.elv
    { range -5 6 | each $to-string~ | each $inc~ }
 
    (test:assert-each (range -4.0 7))
-   { range -5 6 | each $float64~ | each $inc~ }]
+   { range -5 6 | each $inexact-num~ | each $inc~ }]
 
   [dec
-   'works with text, nums, and floats'
+   'works with text, nums, and inexact-nums'
    (test:assert-each (range -6 5))
    { range -5 6 | each $dec~ }
 
@@ -130,17 +130,17 @@ var tests = [base.elv
    { range -5 6 | each $to-string~ | each $dec~ }
 
    (test:assert-each (range -6.0 5))
-   { range -5 6 | each $float64~ | each $dec~ }]
+   { range -5 6 | each $inexact-num~ | each $dec~ }]
 
   [pos/neg
-   'works with text, nums, and floats'
+   'works with text, nums, and inexact-nums'
    (test:assert-each $false $true)
    { each $pos~ [-1 1] }
    { each $neg~ [1 -1] }
    { each $pos~ [(num -1) (num 1)] }
    { each $neg~ [(num 1) (num -1)] }
-   { each $pos~ [(float64 -1) (float64 1)] }
-   { each $neg~ [(float64 1) (float64 -1)] }]
+   { each $pos~ [(inexact-num -1) (inexact-num 1)] }
+   { each $neg~ [(inexact-num 1) (inexact-num -1)] }]
 
   '# Type predicates'
 
