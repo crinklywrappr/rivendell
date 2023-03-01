@@ -210,13 +210,9 @@ rand-sample 0 (range 10)
 MATCHES EXPECTATIONS: `[nothing]`
 ```elvish
 rand-sample 0.5 (range 10)
-▶ 1
 ▶ 2
-▶ 3
-▶ 4
 ▶ 7
 ▶ 8
-▶ 9
 ```
 ```elvish
 rand-sample 1 (range 10)
@@ -240,47 +236,47 @@ range 10 | rand-sample 1
 Take n random samples from the input
 ```elvish
 sample 5 (range 10)
-▶ 9
-▶ 4
 ▶ 6
-▶ 7
-▶ 1
+▶ 9
+▶ 3
+▶ 0
+▶ 2
 ```
 ```elvish
 range 10 | sample 5
-▶ 4
 ▶ 1
-▶ 0
-▶ 3
 ▶ 8
+▶ 3
+▶ 0
+▶ 4
 ```
 ***
 ## shuffle
 ```elvish
 shuffle (range 10)
+▶ 9
+▶ 6
+▶ 5
+▶ 7
+▶ 8
 ▶ 3
 ▶ 1
-▶ 8
-▶ 7
-▶ 5
-▶ 2
-▶ 9
 ▶ 0
-▶ 6
+▶ 2
 ▶ 4
 ```
 ```elvish
 range 10 | shuffle
-▶ 5
-▶ 8
-▶ 4
-▶ 3
 ▶ 0
-▶ 6
+▶ 5
 ▶ 9
+▶ 8
+▶ 6
 ▶ 7
-▶ 2
+▶ 3
 ▶ 1
+▶ 4
+▶ 2
 ```
  
 # Set functions
@@ -578,7 +574,7 @@ put weight | index [[&name=betsy &weight=1000] [&name=jake &weight=756] [&name=s
 Takes a key and returns a closure which looks that key up in a map.
 ```elvish
 k a
-▶ <closure 0xc000c2bc80>
+▶ <closure 0xc000b295c0>
 ```
 ```elvish
 (k a) [&a=1 &b=2]
@@ -590,7 +586,7 @@ k a
 Like `k`, but performs a safe lookup.
 ```elvish
 (k a) [&]
-▶ [&reason=<unknown no such key: a>]
+▶ [&reason=<unknown no such key: a> &stack-trace=<...>]
 ```
 ```elvish
 (sk a &miss=(num 0)) [&]
@@ -612,7 +608,7 @@ Works a bit like call, but returns a function.
 `+` doesn't work with a list...
 ```elvish
 + [1 2 3]
-▶ [&reason=<unknown wrong type of argument 0: must be number>]
+▶ [&reason=<unknown wrong type for arg #0: must be number> &stack-trace=<...>]
 ```
  
 But it does with `destruct`
@@ -714,19 +710,19 @@ put {|@xs| put $@xs} | box (one) | (one) 1 2 3
 Caches function results so they return more quickly.  Function must be pure.
 ```elvish
 memoize {|n| sleep 1; * $n 10}
-▶ <closure 0xc000bbf2c0>
+▶ <closure 0xc0007fef00>
 ```
  
 Here, `$fixtures[f]` is a long running function.
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 1.001739955s
+▶ 1.001022461s
 ```
 ```elvish
 time { $fixtures[f] 10 } | all
 ▶ 100
-▶ 257.814µs
+▶ 289.938µs
 ```
 ***
 ## repeatedly
@@ -734,16 +730,16 @@ time { $fixtures[f] 10 } | all
 Takes a zero-arity function and runs it `n` times
 ```elvish
 repeatedly 10 { randint 1000 }
-▶ 561
-▶ 419
-▶ 525
-▶ 687
-▶ 634
-▶ 460
-▶ 482
-▶ 9
-▶ 571
-▶ 757
+▶ 539
+▶ 363
+▶ 31
+▶ 835
+▶ 721
+▶ 744
+▶ 248
+▶ 540
+▶ 72
+▶ 379
 ```
  
 # Reduce & company
