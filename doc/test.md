@@ -19,19 +19,19 @@
 lowest-level building-block for constructing assertions.  This makes assertion creation a bit easier by defaulting fixtures and store to empty maps.  This document will explain those later.
 ```elvish
 make-assertion foo { } { }
-▶ [&name=foo &f=<closure 0xc000ff8b40> &pred=<closure 0xc000ff8c00> &store=[&] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc0003aba40> &pred=<closure 0xc0003abb00> &store=[&] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar]
-▶ [&name=foo &f=<closure 0xc000da4a80> &pred=<closure 0xc000da4b40> &store=[&] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000263c80> &pred=<closure 0xc000263d40> &store=[&] &fixtures=[&foo=bar]]
 ```
 ```elvish
 make-assertion foo { } { } &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000da5140> &pred=<closure 0xc000da5200> &store=[&frob=nitz] &fixtures=[&]]
+▶ [&name=foo &f=<closure 0xc000f7db00> &pred=<closure 0xc000f7dbc0> &store=[&frob=nitz] &fixtures=[&]]
 ```
 ```elvish
 make-assertion foo { } { } &fixtures=[&foo=bar] &store=[&frob=nitz]
-▶ [&name=foo &f=<closure 0xc000ff9500> &pred=<closure 0xc000ff95c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
+▶ [&name=foo &f=<closure 0xc000138900> &pred=<closure 0xc0001389c0> &store=[&frob=nitz] &fixtures=[&foo=bar]]
 ```
 ***
 ## is-assertion
@@ -93,7 +93,7 @@ call-test {|fixtures store| put $fixtures[x]; put $store[x]} &fixtures=[&x=some]
 `call-test` expects fixtures before store.  This test errors because the input args are swapped.
 ```elvish
 call-test {|store fixtures| put $fixtures[a]; put $store[b]} &fixtures=[&a=a] &store=[&b=b]
-▶ [&reason=<unknown no such key: a>]
+▶ [&reason=<unknown no such key: a> &stack-trace=<...>]
 ```
  
 `call-predicate` accepts two forms.
@@ -110,11 +110,11 @@ call-predicate {|@reality| eq $@reality foo} foo
 Any other form will error
 ```elvish
 call-predicate {|@reality &store=[&]| eq $@reality foo} foo
-▶ [&reason=<unknown unsupported option: fixtures>]
+▶ [&reason=<unknown unsupported option: fixtures> &stack-trace=<...>]
 ```
 ```elvish
 call-predicate {|@reality &fixtures=[&]| eq $@reality foo} foo
-▶ [&reason=<unknown unsupported option: store>]
+▶ [&reason=<unknown unsupported option: store> &stack-trace=<...>]
 ```
 ***
 ## assert
@@ -139,13 +139,13 @@ assoc $store foo bar; put foo
 ```
 ```elvish
 test [mytest [subheader {|store| put foo} ]]
-▶ [&reason=[&content='no assertion before {|store| put foo}' &type=fail]]
+▶ [&reason=[&content='no assertion before {|store| put foo}' &type=fail] &stack-trace=<...>]
 ```
  
 The `store` must be returned as a map
 ```elvish
 test [mytest [subheader (assert-one bar) {|store| put foo; put bar} ]]
-▶ [&reason=[&content='test  put foo; put bar took store but did not emit store as a map.  response[0]=foo' &type=fail]]
+▶ [&reason=[&content='test  put foo; put bar took store but did not emit store as a map.  response[0]=foo' &type=fail] &stack-trace=<...>]
 ```
 ***
 ## high-level-assertions
@@ -187,10 +187,10 @@ general use-cases for each assertion
 ▶ $true
 ```
  
-`assert-num` works on nums & floats.  It could expand to more types if elvish adds more in the future.
+`assert-num` works on nums & inexact-nums.  It could expand to more types if elvish adds more in the future.
 ```elvish
 (assert-num)[f] { num 1 } | put (one)[bool]
-(assert-num)[f] { float64 1 } | put (one)[bool]
+(assert-num)[f] { inexact-num 1 } | put (one)[bool]
 ```
 ```elvish
 ▶ $true
@@ -217,13 +217,13 @@ Simply returning something is not enough for `assert-something`.  A bunch of `$n
 The test runner emits information suitable for debugging and documentation.  Start by giving it nothing.
 ```elvish
 test $nil
-▶ [&reason=[&content='tests must be a list' &type=fail]]
+▶ [&reason=[&content='tests must be a list' &type=fail] &stack-trace=<...>]
 ```
  
 It should have told you it expects a list.  Give it a list.
 ```elvish
 test []
-▶ [&reason=[&content='missing header' &type=fail]]
+▶ [&reason=[&content='missing header' &type=fail] &stack-trace=<...>]
 ```
  
 Now it is complaining about a missing header.  Give it a header.
@@ -239,19 +239,19 @@ Our first victory!  But we have no tests yet.  A test is a function preceded by 
 $nil is not a list
 ```elvish
 test [mytests $nil]
-▶ [&reason=[&content='expected list or string, got nil' &type=fail]]
+▶ [&reason=[&content='expected list or string, got nil' &type=fail] &stack-trace=<...>]
 ```
  
 This is missing a subheader
 ```elvish
 test [mytests []]
-▶ [&reason=[&content='missing subheader' &type=fail]]
+▶ [&reason=[&content='missing subheader' &type=fail] &stack-trace=<...>]
 ```
  
 This is missing an assertion
 ```elvish
 test [mytests ['bad test' { }]]
-▶ [&reason=[&content='no assertion before { }' &type=fail]]
+▶ [&reason=[&content='no assertion before { }' &type=fail] &stack-trace=<...>]
 ```
 ***
 ## working-test-runner
@@ -346,5 +346,5 @@ However, when taking a store, the store must be the first element returned, even
      [store-test
        (assert-one bar &store=[&foo=bar])
        {|store| put $store[foo]}]]
-▶ [&reason=[&content='test  put $store[foo] took store but did not emit store as a map.  response[0]=bar' &type=fail]]
+▶ [&reason=[&content='test  put $store[foo] took store but did not emit store as a map.  response[0]=bar' &type=fail] &stack-trace=<...>]
 ```

@@ -37,11 +37,11 @@ These functions largely assume numbers, lists, and strings.  The list operations
 ***
 ## is-zero
  
-works with text, nums, and floats
+works with text, nums, and inexact-nums
 ```elvish
 is-zero 0
 is-zero (num 0)
-is-zero (float64 0)
+is-zero (inexact-num 0)
 ```
 ```elvish
 ▶ $true
@@ -49,7 +49,7 @@ is-zero (float64 0)
 ```elvish
 is-zero 1
 is-zero (randint 1 100)
-is-zero (float64 (randint 1 100))
+is-zero (inexact-num (randint 1 100))
 ```
 ```elvish
 ▶ $false
@@ -57,11 +57,11 @@ is-zero (float64 (randint 1 100))
 ***
 ## is-one
  
-works with text, nums, and floats
+works with text, nums, and inexact-nums
 ```elvish
 is-one 1
 is-one (num 1)
-is-one (float64 1)
+is-one (inexact-num 1)
 ```
 ```elvish
 ▶ $true
@@ -69,7 +69,7 @@ is-one (float64 1)
 ```elvish
 is-one 0
 is-one (num 0)
-is-one (float64 0)
+is-one (inexact-num 0)
 ```
 ```elvish
 ▶ $false
@@ -96,10 +96,10 @@ range -5 6 | each $to-string~ | each $is-even~
 ▶ $false
 ```
  
-fails with floats
+fails with inexact-nums
 ```elvish
 is-even 5.0
-▶ [&reason=<unknown wrong type of argument 0: cannot parse as integer: 5.0>]
+▶ [&reason=<unknown wrong type for arg #0: cannot parse as integer: 5.0> &stack-trace=<...>]
 ```
 ***
 ## odds
@@ -123,15 +123,15 @@ range -5 6 | each $to-string~ | each $is-odd~
 ▶ $true
 ```
  
-fails with floats
+fails with inexact-nums
 ```elvish
 is-odd 5.0
-▶ [&reason=<unknown wrong type of argument 0: cannot parse as integer: 5.0>]
+▶ [&reason=<unknown wrong type for arg #0: cannot parse as integer: 5.0> &stack-trace=<...>]
 ```
 ***
 ## inc
  
-works with text, nums, and floats
+works with text, nums, and inexact-nums
 ```elvish
 range -5 6 | each $inc~
 range -5 6 | each $to-string~ | each $inc~
@@ -150,7 +150,7 @@ range -5 6 | each $to-string~ | each $inc~
 ▶ 6
 ```
 ```elvish
-range -5 6 | each $float64~ | each $inc~
+range -5 6 | each $inexact-num~ | each $inc~
 ▶ -4.0
 ▶ -3.0
 ▶ -2.0
@@ -166,7 +166,7 @@ range -5 6 | each $float64~ | each $inc~
 ***
 ## dec
  
-works with text, nums, and floats
+works with text, nums, and inexact-nums
 ```elvish
 range -5 6 | each $dec~
 range -5 6 | each $to-string~ | each $dec~
@@ -185,7 +185,7 @@ range -5 6 | each $to-string~ | each $dec~
 ▶ 4
 ```
 ```elvish
-range -5 6 | each $float64~ | each $dec~
+range -5 6 | each $inexact-num~ | each $dec~
 ▶ -6.0
 ▶ -5.0
 ▶ -4.0
@@ -201,14 +201,14 @@ range -5 6 | each $float64~ | each $dec~
 ***
 ## pos/neg
  
-works with text, nums, and floats
+works with text, nums, and inexact-nums
 ```elvish
 each $pos~ [-1 1]
 each $neg~ [1 -1]
 each $pos~ [(num -1) (num 1)]
 each $neg~ [(num 1) (num -1)]
-each $pos~ [(float64 -1) (float64 1)]
-each $neg~ [(float64 1) (float64 -1)]
+each $pos~ [(inexact-num -1) (inexact-num 1)]
+each $neg~ [(inexact-num 1) (inexact-num -1)]
 ```
 ```elvish
 ▶ $false
